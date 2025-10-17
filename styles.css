@@ -1652,6 +1652,15 @@ button:active {
     padding-right: 0.5rem;
 }
 
+/* Mobile: evitar corte interno por altura fixa */
+@media (max-width: 640px) {
+  .produtos-grid-lista {
+    max-height: none;
+    overflow-y: visible;
+    padding-right: 0;
+  }
+}
+
 .produto-card {
     background: rgba(255, 255, 255, 0.03);
     border: 1px solid rgba(255, 255, 255, 0.1);
@@ -2092,6 +2101,14 @@ button:active {
 .analise-card-mini .chart-wrapper { height: 160px; }
 
 .painel.lista .produtos-lista { max-height: 600px; overflow-y: auto; }
+
+/* Mobile: remover altura fixa e scroll interno no Estoque */
+@media (max-width: 640px) {
+  .painel.lista .produtos-lista {
+    max-height: none;
+    overflow-y: visible;
+  }
+}
 
 .estoque-extra.novo { margin-top: var(--spacing-lg); }
 .mov-card .card-content { padding: 0.75rem 1rem; }
@@ -3593,7 +3610,13 @@ body.gate-open .toast-container { display: none !important; }
     .relatorios-stats .stat-card {
         flex-direction: column;
     }
-    
+}
+
+/* Small phones: uma coluna para evitar overflow horizontal */
+@media (max-width: 640px) {
+    .relatorios-stats { grid-template-columns: 1fr; }
+}
+
     .filtros-actions {
         flex-direction: column;
     }
@@ -4373,15 +4396,44 @@ button, .tab-btn, .acao-btn, .btn-edit, .btn-delete, .search-btn, .add-item-btn,
 
 /* Ajustes de cabeçalho para smartphones */
   @media (max-width: 640px) {
+    /* Layout de coluna e compactação de espaço */
+    header { padding: var(--spacing-md); border-radius: var(--radius-xl); box-shadow: var(--shadow-lg); }
     .header-content { flex-direction: column; align-items: stretch; gap: var(--spacing-md); }
     .header-left, .header-right { width: 100%; min-width: 0; }
-    .header-right { justify-content: space-between; }
-    .header-stats { flex-wrap: wrap; gap: var(--spacing-md); }
-    .stat-item { flex: 1 1 160px; min-width: calc(50% - var(--spacing-md)); }
+
+    /* Tipografia e marca mais enxutas */
+    .logo-container { gap: var(--spacing-sm); }
+    .logo-icon { padding: 6px; border-radius: 10px; }
+    .logo-text h1 { font-size: 1.25rem; }
+    .logo-subtitle { font-size: 0.7rem; }
+
+    /* Indicadores de status em chips compactos */
+    .header-center { justify-content: flex-start; }
+    .status-indicators { flex-wrap: wrap; gap: var(--spacing-sm); }
+    .status-item { padding: 4px 8px; font-size: 0.8rem; }
+
+    /* Cards de estatísticas como grade responsiva */
+    .header-right { flex-direction: column; align-items: stretch; gap: var(--spacing-md); }
+    .header-stats { display: grid; grid-template-columns: 1fr 1fr; gap: var(--spacing-md); }
+    .header-stats .stat-item { padding: var(--spacing-sm) var(--spacing-md); min-width: 0; }
+    .header-stats .stat-icon { width: 28px; height: 28px; }
+    .header-stats .stat-label { font-size: 0.7rem; }
+    .header-stats .stat-value { font-size: 0.95rem; }
+
+    /* Ações de conta alinhadas e com wrap */
+    .account-actions { width: 100%; justify-content: space-between; flex-wrap: wrap; gap: var(--spacing-sm); }
+    .account-actions .btn-notification.primary { flex: 1 1 120px; min-width: 0; }
+    #user-info.user-badge { flex: 1 1 auto; min-width: 0; }
 
     /* Navegação padrão em smartphones (sem sticky para evitar bug de arrasto) */
     .tabs { position: static; top: auto; z-index: 1; background: white; }
     .tab-btn { scroll-snap-align: center; }
     .tab-content { padding-bottom: calc(env(safe-area-inset-bottom) + 88px); }
     .container { padding-top: max(var(--spacing-sm), env(safe-area-inset-top)); padding-bottom: max(var(--spacing-sm), env(safe-area-inset-bottom)); }
+  }
+
+  /* Quebra extra para telas muito pequenas */
+  @media (max-width: 420px) {
+    .header-stats { grid-template-columns: 1fr; }
+    .logo-text h1 { font-size: 1.15rem; }
   }

@@ -4189,6 +4189,8 @@ document.addEventListener('DOMContentLoaded', function() {
     try {
         const brandEl = document.getElementById('brand-name-login');
         const brandMarkEl = document.getElementById('brand-mark');
+        const brandLogoLogin = document.getElementById('brand-logo-login');
+        const headerLogoImg = document.getElementById('brand-logo');
         let brandName = (window.nome_empresa) || localStorage.getItem('nome_empresa') || document.querySelector('.logo-text h1')?.textContent || 'Sua Empresa';
         if (brandEl) brandEl.textContent = brandName;
         if (brandMarkEl) {
@@ -4196,6 +4198,8 @@ document.addEventListener('DOMContentLoaded', function() {
             brandMarkEl.textContent = initials || '★';
             brandMarkEl.setAttribute('aria-hidden', 'true');
         }
+
+
     } catch (_) {}
 
     // Listeners reativos para filtros de Relatórios

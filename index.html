@@ -57,13 +57,29 @@
       .login-card .input-row { flex-wrap: wrap; gap: 8px; }
       .login-card .input-row a { overflow-wrap: anywhere; word-break: break-word; hyphens: auto; }
       .brand-header { display:flex; align-items:center; gap:12px; margin-bottom:12px; }
-      .brand-mark { width:36px; height:36px; border-radius:10px; background: linear-gradient(135deg,#f59e0b,#fbbf24 60%,#ffd166); display:flex; align-items:center; justify-content:center; color:#0b1020; font-weight:800; box-shadow: 0 6px 14px rgba(0,0,0,0.25), 0 0 0 1px rgba(255,255,255,0.08) inset; }
-      .brand-text { display:flex; flex-direction:column; line-height:1.1; }
-      .brand-text #brand-name-login { color:#f8fafc; font-size:18px; font-weight:800; letter-spacing:.3px; }
-      .brand-text .brand-subtitle { color:#cbd5e1; font-size:13px; }
-      @media (max-width: 640px) { .brand-mark { width:32px; height:32px; border-radius:9px; } .brand-text #brand-name-login { font-size:17px; } }
+      .brand-logo-img { height: 32px; width: auto; display: none; object-fit: contain; padding: 6px 8px; border-radius: 8px; background: rgba(255,255,255,0.14); border: 1px solid rgba(255,255,255,0.22); box-shadow: 0 6px 14px rgba(0,0,0,0.25), 0 0 0 1px rgba(255,255,255,0.08) inset; filter: brightness(1.08) contrast(1.1) saturate(1.06); }
+       .brand-mark { width:36px; height:36px; border-radius:10px; background: linear-gradient(135deg,#f59e0b,#fbbf24 60%,#ffd166); display:flex; align-items:center; justify-content:center; color:#0b1020; font-weight:800; box-shadow: 0 6px 14px rgba(0,0,0,0.25), 0 0 0 1px rgba(255,255,255,0.08) inset; }
+       .brand-text { display:flex; flex-direction:column; line-height:1.1; }
+       .brand-text #brand-name-login { color:#f8fafc; font-size:18px; font-weight:800; letter-spacing:.3px; }
+       .brand-text .brand-subtitle { color:#cbd5e1; font-size:13px; }
+       @media (max-width: 640px) { .brand-mark { width:32px; height:32px; border-radius:9px; } .brand-logo-img { height: 28px; padding:5px 7px; border-radius:7px; } .brand-text #brand-name-login { font-size:17px; } }
     </style>
     <style id="auth-header-styles">
+        .logo-image {
+             height: 32px;
+             width: auto;
+             display: none; /* será exibida quando a imagem carregar */
+             object-fit: contain;
+             padding: 6px 8px;
+             border-radius: 8px;
+             background: rgba(255, 255, 255, 0.18);
+             border: 1px solid rgba(255, 255, 255, 0.28);
+             box-shadow: 0 6px 14px rgba(0,0,0,0.25), 0 0 0 1px rgba(255,255,255,0.08) inset;
+             filter: brightness(1.08) contrast(1.1) saturate(1.06);
+         }
+         @media (max-width: 640px) {
+             .logo-image { height: 28px; padding: 5px 7px; border-radius: 7px; }
+         }
         .account-actions {
             display: flex;
             align-items: center;
@@ -135,6 +151,7 @@
     <div id="login-gate" class="login-gate" style="position:fixed; inset:0; display:none; align-items:center; justify-content:center; z-index:9999;">
         <div class="login-card" role="dialog" aria-labelledby="login-title" aria-modal="true">
             <div class="brand-header">
+                <img id="brand-logo-login" class="brand-logo-img" alt="Logo da Hiden Systems" />
                 <div class="brand-mark" id="brand-mark">★</div>
                 <div class="brand-text">
                     <span id="brand-name-login"></span>
@@ -178,6 +195,7 @@
                                 <circle cx="22" cy="22" r="1.5" fill="#f59e0b"/>
                             </svg>
                         </div>
+                        <img id="brand-logo" class="logo-image" alt="Logo da Hiden Systems" />
                         <div class="logo-text">
                             <h1>HidenSystems</h1>
                             <span class="logo-subtitle">Sistema de Gestão</span>
