@@ -51,8 +51,17 @@
         .login-card .notification-actions .btn-notification.primary { min-height: 44px; font-size: 16px; }
       }
 
-      /* Touch-friendly links */
+      /* Touch-friendly links e cabeçalho de marca */
       .login-card a { padding: 6px 0; }
+      .login-card { min-width: 0; }
+      .login-card .input-row { flex-wrap: wrap; gap: 8px; }
+      .login-card .input-row a { overflow-wrap: anywhere; word-break: break-word; hyphens: auto; }
+      .brand-header { display:flex; align-items:center; gap:12px; margin-bottom:12px; }
+      .brand-mark { width:36px; height:36px; border-radius:10px; background: linear-gradient(135deg,#f59e0b,#fbbf24 60%,#ffd166); display:flex; align-items:center; justify-content:center; color:#0b1020; font-weight:800; box-shadow: 0 6px 14px rgba(0,0,0,0.25), 0 0 0 1px rgba(255,255,255,0.08) inset; }
+      .brand-text { display:flex; flex-direction:column; line-height:1.1; }
+      .brand-text #brand-name-login { color:#f8fafc; font-size:18px; font-weight:800; letter-spacing:.3px; }
+      .brand-text .brand-subtitle { color:#cbd5e1; font-size:13px; }
+      @media (max-width: 640px) { .brand-mark { width:32px; height:32px; border-radius:9px; } .brand-text #brand-name-login { font-size:17px; } }
     </style>
     <style id="auth-header-styles">
         .account-actions {
@@ -125,6 +134,13 @@
 <body>
     <div id="login-gate" class="login-gate" style="position:fixed; inset:0; display:none; align-items:center; justify-content:center; z-index:9999;">
         <div class="login-card" role="dialog" aria-labelledby="login-title" aria-modal="true">
+            <div class="brand-header">
+                <div class="brand-mark" id="brand-mark">★</div>
+                <div class="brand-text">
+                    <span id="brand-name-login"></span>
+                    <span class="brand-subtitle">Sistema de Gestão</span>
+                </div>
+            </div>
             <h2 id="login-title" style="margin:0 0 8px; font-size:20px;">Acesso ao Sistema</h2>
             <p style="margin:0 0 16px; color:#555;">Entre para acessar o conteúdo.</p>
             <div class="input-group">

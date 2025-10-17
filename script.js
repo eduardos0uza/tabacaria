@@ -4185,6 +4185,19 @@ document.addEventListener('DOMContentLoaded', function() {
         buscarInput.addEventListener('input', buscarProdutosPorNome);
     }
 
+    // Preencher marca na tela de login
+    try {
+        const brandEl = document.getElementById('brand-name-login');
+        const brandMarkEl = document.getElementById('brand-mark');
+        let brandName = (window.nome_empresa) || localStorage.getItem('nome_empresa') || document.querySelector('.logo-text h1')?.textContent || 'Sua Empresa';
+        if (brandEl) brandEl.textContent = brandName;
+        if (brandMarkEl) {
+            const initials = (brandName || '').split(/\s+/).slice(0, 2).map(s => s?.[0] || '').join('').toUpperCase();
+            brandMarkEl.textContent = initials || '★';
+            brandMarkEl.setAttribute('aria-hidden', 'true');
+        }
+    } catch (_) {}
+
     // Listeners reativos para filtros de Relatórios
     const vendedorRelSelect = document.getElementById('vendedor-relatorio-select');
     const dataInicioEl = document.getElementById('data-inicio');
