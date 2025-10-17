@@ -1,0 +1,21 @@
+# Sistema/OS
+Thumbs.db
+.DS_Store
+
+# Ferramentas/Build
+node_modules/
+dist/
+build/
+
+# IDE
+.vscode/
+
+# Snapshots e artefatos locais
+snapshots/
+*.zip
+
+# Logs
+*.log
+
+# Ambiente
+.env
