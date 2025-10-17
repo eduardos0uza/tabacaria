@@ -4371,8 +4371,8 @@ button, .tab-btn, .acao-btn, .btn-edit, .btn-delete, .search-btn, .add-item-btn,
   .header-stats { flex-wrap: wrap; gap: var(--spacing-md); }
   .stat-item { flex: 1 1 160px; min-width: calc(50% - var(--spacing-md)); }
 
-  /* Sticky navegação e padding seguro de conteúdo */
-  .tabs { position: sticky; top: max(env(safe-area-inset-top), 0px); z-index: 1000; background: white; }
+  /* Navegação padrão em smartphones (sem sticky para evitar bug de arrasto) */
+  .tabs { position: static; top: auto; z-index: 1; background: white; }
   .tab-btn { scroll-snap-align: center; }
   .tab-content { padding-bottom: calc(env(safe-area-inset-bottom) + 88px); }
   .container { padding-top: max(var(--spacing-sm), env(safe-area-inset-top)); padding-bottom: max(var(--spacing-sm), env(safe-area-inset-bottom)); }
