@@ -13,7 +13,7 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style id="login-gate-styles">
       /* Login Gate - Professional Theme */
-      body.gate-open { height: 100vh; overflow: hidden; }
+      body.gate-open { height: 100dvh; overflow: hidden; }
       body.gate-open .container { visibility: hidden; }
       .login-gate {
         position: fixed; inset: 0; display: none; align-items: center; justify-content: center; z-index: 9999;
@@ -39,6 +39,18 @@
       .login-card .notification-actions { margin-top: 8px; }
       .login-card .notification-actions .btn-notification.primary { width: 100%; padding: 10px 14px; border-radius: 10px; border: none; background: linear-gradient(90deg,#2563eb,#1e40af); color: #fff; }
       .error-message { color: #fca5a5; }
+
+      /* Responsivo: smartphone */
+      @media (max-width: 640px) {
+        .login-gate { padding: 16px; padding-top: max(16px, env(safe-area-inset-top)); padding-bottom: max(16px, env(safe-area-inset-bottom)); height: 100dvh; }
+        .login-card { max-width: 100%; margin: 0; padding: 18px 16px; border-radius: 14px; }
+        .login-card h2 { font-size: 20px; }
+        .login-card .input-group input { padding: 12px 14px; font-size: 16px; }
+        .login-card .notification-actions .btn-notification.primary { min-height: 44px; font-size: 16px; }
+      }
+
+      /* Touch-friendly links */
+      .login-card a { padding: 6px 0; }
     </style>
     <style id="auth-header-styles">
         .account-actions {
@@ -98,6 +110,14 @@
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
         }
         .logout-btn:active { transform: translateY(0); }
+        
+        /* Ajustes mobile para badge */
+        @media (max-width: 420px) {
+          .user-email { max-width: 140px; }
+        }
+        @media (max-width: 640px) {
+          .user-badge { padding: 6px 8px; }
+        }
     </style>
 </head>
 <body>

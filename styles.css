@@ -4278,3 +4278,12 @@ button, .tab-btn, .acao-btn, .btn-edit, .btn-delete, .search-btn, .add-item-btn,
 }
 
 .quick-access-btn { bottom: calc(12px + env(safe-area-inset-bottom)); }
+
+/* Ajustes de cabeçalho para smartphones */
+@media (max-width: 640px) {
+  .header-content { flex-direction: column; align-items: stretch; gap: var(--spacing-md); }
+  .header-left, .header-right { width: 100%; }
+  .header-right { justify-content: space-between; }
+  .header-stats { flex-wrap: wrap; gap: var(--spacing-md); }
+  .stat-item { flex: 1 1 160px; min-width: calc(50% - var(--spacing-md)); }
+}
