@@ -4340,12 +4340,13 @@ button, .tab-btn, .acao-btn, .btn-edit, .btn-delete, .search-btn, .add-item-btn,
   min-height: 44px;
   min-width: 44px;
   touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
 }
 
 :focus-visible { outline: 2px solid var(--primary-blue); outline-offset: 2px; }
 
 @media (hover: none) {
-  .tab-btn:hover, .btn-edit:hover, .btn-delete:hover, .search-btn:hover, .qty-btn:hover, .cmdk-item:hover {
+  .tab-btn:hover:not(.active), .btn-edit:hover, .btn-delete:hover, .search-btn:hover, .qty-btn:hover, .cmdk-item:hover {
     transform: none !important;
     box-shadow: none !important;
     background: inherit !important;
