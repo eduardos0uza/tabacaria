@@ -4247,3 +4247,30 @@ button:active {
   min-width: 0;
   padding: 0.85rem 1.25rem;
 }
+
+/* ===== Compatibilidade móvel universal ===== */
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+img, svg { max-width: 100%; height: auto; }
+.tabs { -webkit-overflow-scrolling: touch; }
+
+button, .tab-btn, .acao-btn, .btn-edit, .btn-delete, .search-btn, .add-item-btn, .qty-btn {
+  min-height: 44px;
+  min-width: 44px;
+  touch-action: manipulation;
+}
+
+:focus-visible { outline: 2px solid var(--primary-blue); outline-offset: 2px; }
+
+@media (hover: none) {
+  .tab-btn:hover, .btn-edit:hover, .btn-delete:hover, .search-btn:hover, .qty-btn:hover, .cmdk-item:hover {
+    transform: none !important;
+    box-shadow: none !important;
+    background: inherit !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+}
+
+.quick-access-btn { bottom: calc(12px + env(safe-area-inset-bottom)); }
