@@ -4234,7 +4234,22 @@ function showTab(tabName) {
             targetButton.classList.add('active');
             targetButton.setAttribute('aria-selected', 'true');
             targetButton.setAttribute('tabindex', '0');
-            try { targetButton.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' }); } catch (_) {}
+            try {
+                const isTouch = window.matchMedia('(hover: none)').matches || window.matchMedia('(pointer: coarse)').matches;
+                if (!isTouch) {
+                    targetButton.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+                } else {
+                    // Em telas touch, evitamos animações para não causar travamento
+                    const tabsEl = document.querySelector('.tabs');
+                    if (tabsEl) {
+                        const btnRect = targetButton.getBoundingClientRect();
+                        const tabsRect = tabsEl.getBoundingClientRect();
+                        if (btnRect.left < tabsRect.left || btnRect.right > tabsRect.right) {
+                            targetButton.scrollIntoView({ behavior: 'auto', inline: 'center', block: 'nearest' });
+                        }
+                    }
+                }
+            } catch (_) {}
             
             console.log(`✅ Aba ${tabName} ativada com sucesso`);
             

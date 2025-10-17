@@ -1877,6 +1877,10 @@ button:active {
         font-size: 1.5rem;
     }
     
+    .tabs {
+        scroll-snap-type: none;
+    }
+    
     .tab-btn {
         flex: 1 1 100%;
         margin-bottom: var(--spacing-xs);
