@@ -44,11 +44,23 @@
 
       /* Responsivo: smartphone */
       @media (max-width: 640px) {
-        .login-gate { padding: 16px; padding-top: max(16px, env(safe-area-inset-top)); padding-bottom: max(16px, env(safe-area-inset-bottom)); height: 100dvh; }
-        .login-card { max-width: 100%; margin: 0; padding: 18px 16px; border-radius: 14px; }
+        /* Cobertura total e rolagem quando necessário (teclado aberto, telas pequenas) */
+        .login-gate { padding: 16px; padding-top: max(16px, env(safe-area-inset-top)); padding-bottom: max(16px, env(safe-area-inset-bottom)); height: 100dvh; overflow: auto; }
+        /* Card com altura máxima segura e rolagem interna para evitar corte no rodapé */
+        .login-card { max-width: 100%; margin: 0; padding: 18px 16px; border-radius: 14px; max-height: calc(100dvh - max(16px, env(safe-area-inset-top)) - max(16px, env(safe-area-inset-bottom))); overflow: auto; }
         .login-card h2 { font-size: 20px; }
         .login-card .input-group input { padding: 12px 14px; font-size: 16px; }
-        .login-card .notification-actions .btn-notification.primary { min-height: 44px; font-size: 16px; }
+        .login-card .notification-actions { margin-top: 8px; }
+        .login-card .notification-actions .btn-notification.primary { min-height: 48px; font-size: 16px; }
+      }
+      @supports (height: 100svh) {
+        @media (max-width: 640px) {
+          .login-card { max-height: calc(100svh - max(16px, env(safe-area-inset-top)) - max(16px, env(safe-area-inset-bottom))); }
+        }
+      }
+      @media (max-width: 420px) {
+        /* Margem inferior extra para não encostar na barra do navegador */
+        .login-card { margin-bottom: max(8px, env(safe-area-inset-bottom)); }
       }
 
       /* Touch-friendly links e cabeçalho de marca */
