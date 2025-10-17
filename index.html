@@ -1,0 +1,1231 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Gestão - HidenSystems</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="header-content">
+                <div class="header-left">
+                    <div class="logo-container">
+                        <div class="logo-icon">
+                            <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <rect width="40" height="40" rx="12" fill="#f59e0b"/>
+                                <path d="M12 16h16v12a2 2 0 01-2 2H14a2 2 0 01-2-2V16z" fill="white"/>
+                                <path d="M16 12v4h8v-4a2 2 0 00-2-2h-4a2 2 0 00-2 2z" fill="white" opacity="0.8"/>
+                                <circle cx="18" cy="22" r="1.5" fill="#f59e0b"/>
+                                <circle cx="22" cy="22" r="1.5" fill="#f59e0b"/>
+                            </svg>
+                        </div>
+                        <div class="logo-text">
+                            <h1>HidenSystems</h1>
+                            <span class="logo-subtitle">Sistema de Gestão</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="header-center">
+                    <div class="status-indicators">
+                        <div class="status-item">
+                            <div class="status-icon online"></div>
+                            <span>Sistema Online</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="header-right">
+                    <div class="header-stats">
+                        <div class="stat-item">
+                            <div class="stat-icon">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+                                    <line x1="8" y1="21" x2="16" y2="21"/>
+                                    <line x1="12" y1="17" x2="12" y2="21"/>
+                                </svg>
+                            </div>
+                            <div class="stat-content">
+                                <span class="stat-label">Data/Hora</span>
+                                <span class="stat-value" id="current-time"></span>
+                            </div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-icon">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <line x1="12" y1="1" x2="12" y2="23"/>
+                                    <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                                </svg>
+                            </div>
+                            <div class="stat-content">
+                                <span class="stat-label">Vendas Hoje</span>
+                                <span class="stat-value" id="total-vendas">R$ 0,00</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <nav class="tabs">
+            <button class="tab-btn active" onclick="showTab('caixa')">
+                <div class="tab-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M3 3h18l-1 13H4L3 3z"/>
+                        <path d="M16 16a2 2 0 1 1-4 0 2 2 0 0 1 4 0z"/>
+                        <path d="M9 16a2 2 0 1 1-4 0 2 2 0 0 1 4 0z"/>
+                    </svg>
+                </div>
+                <span class="tab-text">Caixa</span>
+                <div class="tab-badge">PDV</div>
+            </button>
+            <button class="tab-btn" onclick="showTab('estoque')">
+                <div class="tab-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+                        <polyline points="3.27,6.96 12,12.01 20.73,6.96"/>
+                        <line x1="12" y1="22.08" x2="12" y2="12"/>
+                    </svg>
+                </div>
+                <span class="tab-text">Estoque</span>
+            </button>
+            <button class="tab-btn" onclick="showTab('produtos')">
+                <div class="tab-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+                        <line x1="8" y1="21" x2="16" y2="21"/>
+                        <line x1="12" y1="17" x2="12" y2="21"/>
+                    </svg>
+                </div>
+                <span class="tab-text">Produtos</span>
+                <div class="tab-notification" id="produtos-tab-badge">0</div>
+            </button>
+            <button class="tab-btn" onclick="showTab('relatorios')">
+                <div class="tab-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="20" x2="18" y2="10"/>
+                        <line x1="12" y1="20" x2="12" y2="4"/>
+                        <line x1="6" y1="20" x2="6" y2="14"/>
+                    </svg>
+                </div>
+                <span class="tab-text">Relatórios</span>
+            </button>
+            <button class="tab-btn" onclick="showTab('vendedores')">
+                <div class="tab-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="7" r="4"/>
+                        <path d="M5.5 21a6.5 6.5 0 0 1 13 0"/>
+                    </svg>
+                </div>
+                <span class="tab-text">Vendedores</span>
+            </button>
+        </nav>
+
+        <!-- Aba Caixa -->
+        <div id="caixa" class="tab-content active">
+            <div class="dashboard-header" role="region" aria-labelledby="pdv-titulo">
+                <div class="dashboard-title">
+                    <div class="title-icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" focusable="false">
+                            <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+                            <line x1="8" y1="21" x2="16" y2="21"/>
+                            <line x1="12" y1="17" x2="12" y2="21"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <h2 id="pdv-titulo">Ponto de Venda</h2>
+                        <p id="pdv-subtitulo">Sistema de Caixa Profissional</p>
+                    </div>
+                </div>
+                <div class="dashboard-stats">
+                    <div class="quick-stat">
+                        <div class="stat-number" id="vendas-hoje">0</div>
+                        <div class="stat-label">Vendas Hoje</div>
+                    </div>
+                    <div class="quick-stat">
+                        <div class="stat-number" id="ticket-medio">R$ 0</div>
+                        <div class="stat-label">Ticket Médio</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="caixa-grid">
+                <div class="produto-card">
+                    <div class="card-header">
+                        <div class="card-icon">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="9" cy="21" r="1"/>
+                                <circle cx="20" cy="21" r="1"/>
+                                <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
+                            </svg>
+                        </div>
+                        <h3>Seleção de Produtos</h3>
+                        <div class="card-badge">Ativo</div>
+                    </div>
+                    <div class="card-content">
+                        <div class="select-wrapper">
+                            <select id="produto-select">
+                                <option value="">🔍 Buscar produto...</option>
+                            </select>
+                            <div class="select-icon">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polyline points="6,9 12,15 18,9"/>
+                                </svg>
+                            </div>
+                        </div>
+                        
+                        <div class="produto-details">
+                            <div class="detail-row">
+                                <div class="input-group">
+                                    <label>Quantidade</label>
+                                    <div class="quantity-controls">
+                                        <button type="button" onclick="adjustQuantity(-1)">-</button>
+                                        <input type="number" id="quantidade" value="1" min="1">
+                                        <button type="button" onclick="adjustQuantity(1)">+</button>
+                                    </div>
+                                </div>
+                                <div class="price-display">
+                                    <label>Preço Unitário</label>
+                                    <div class="price-value" id="preco-unitario">R$ 0,00</div>
+                                </div>
+                            </div>
+                            <div class="total-preview">
+                                <span>Total do Item:</span>
+                                <span class="total-value" id="total-item">R$ 0,00</span>
+                            </div>
+                        </div>
+                        
+                        <button class="add-item-btn" onclick="adicionarItem()">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="12" y1="5" x2="12" y2="19"/>
+                                <line x1="5" y1="12" x2="19" y2="12"/>
+                            </svg>
+                            Adicionar ao Carrinho
+                        </button>
+                    </div>
+                </div>
+
+                <div class="carrinho-card">
+                    <div class="card-header">
+                        <div class="card-icon">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M3 3h18l-1 13H4L3 3z"/>
+                                <path d="M16 16a2 2 0 1 1-4 0 2 2 0 0 1 4 0z"/>
+                                <path d="M9 16a2 2 0 1 1-4 0 2 2 0 0 1 4 0z"/>
+                            </svg>
+                        </div>
+                        <h3>Carrinho de Compras</h3>
+                        <div class="item-count" id="item-count">0 itens</div>
+                    </div>
+                    <div class="card-content">
+                        <div class="carrinho-lista" id="carrinho-lista">
+                            <div class="empty-cart">
+                                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                    <circle cx="9" cy="21" r="1"/>
+                                    <circle cx="20" cy="21" r="1"/>
+                                    <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
+                                </svg>
+                                <p>Carrinho vazio</p>
+                                <small>Adicione produtos para começar</small>
+                            </div>
+                        </div>
+                        <div class="carrinho-summary">
+                            <div class="summary-row">
+                                <span>Subtotal:</span>
+                                <span id="subtotal">R$ 0,00</span>
+                            </div>
+                            <div class="summary-row total">
+                                <span>Total:</span>
+                                <span id="total-carrinho">R$ 0,00</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="pagamento-card">
+                    <div class="card-header">
+                        <div class="card-icon">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/>
+                                <line x1="1" y1="10" x2="23" y2="10"/>
+                            </svg>
+                        </div>
+                        <h3>Pagamento</h3>
+                        <div class="security-badge">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                            </svg>
+                            Seguro
+                        </div>
+                        <div id="payment-selected-badge" class="security-badge" style="margin-left: 8px; background: rgba(255,255,255,0.06);">
+                            Forma: —
+                        </div>
+                        <div id="vendor-selected-badge" class="security-badge" style="margin-left: 8px; background: rgba(255,255,255,0.06);">
+                            Vendedor: —
+                        </div>
+                    </div>
+                    <div class="card-content">
+                        <div class="select-wrapper" style="margin-bottom: 12px;">
+                            <label for="vendedor-select" style="display:block; margin-bottom:6px; font-size: 0.9rem; color:#9aa0a6;">Selecionar Vendedor</label>
+                            <select id="vendedor-select">
+                                <option value="">👤 Escolha o vendedor...</option>
+                            </select>
+                            <div class="select-icon">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polyline points="6,9 12,15 18,9"/>
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="payment-methods">
+                            <button class="payment-method payment-btn" onclick="selecionarPagamento('dinheiro', this)">
+                                <div class="method-icon">💵</div>
+                                <span>Dinheiro</span>
+                            </button>
+                            <button class="payment-method payment-btn" onclick="selecionarPagamento('credito', this)">
+                                <div class="method-icon">💳</div>
+                                <span>Cartão de Crédito</span>
+                            </button>
+                            <button class="payment-method payment-btn" onclick="selecionarPagamento('debito', this)">
+                                <div class="method-icon">💳</div>
+                                <span>Cartão de Débito</span>
+                            </button>
+                            <button class="payment-method payment-btn" onclick="selecionarPagamento('pix', this)">
+                                <div class="method-icon">📱</div>
+                                <span>PIX</span>
+                            </button>
+                        </div>
+                        
+                        <div id="dinheiro-section" class="payment-details" style="display: none;">
+                            <div class="input-group">
+                                <label for="valor-recebido">Valor Recebido</label>
+                                <div class="currency-input">
+                                    <span class="currency-symbol">R$</span>
+                                    <input type="number" id="valor-recebido" placeholder="0,00" step="0.01">
+                                </div>
+                            </div>
+                            <div id="troco-info" class="troco-display" style="display: none;"></div>
+                        </div>
+                        
+                        <!-- PIX: QR Code e Copia e Cola -->
+                        <div id="pix-section" class="payment-details" style="display:none;">
+                            <div class="input-group">
+                                <label>PIX — QR Code</label>
+                                <div class="pix-qr-wrapper">
+                                    <canvas id="pix-qr" width="180" height="180" aria-label="QR Code para pagamento PIX"></canvas>
+                                </div>
+                            </div>
+                            <div class="input-group">
+                                <label for="pix-code">Código Copia e Cola</label>
+                                <div class="input-wrapper">
+                                    <textarea id="pix-code" rows="3" readonly placeholder="O código será gerado automaticamente ao selecionar PIX."></textarea>
+                                </div>
+                                <div class="form-actions">
+                                    <button type="button" class="btn-secondary" onclick="sistema.copiarPix()">Copiar código</button>
+                                    <button type="button" class="btn-primary" onclick="sistema.regerarPix()">Gerar novamente</button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <button id="finalizar-venda" class="finalize-btn" onclick="finalizarVenda()" disabled>
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="20,6 9,17 4,12"/>
+                            </svg>
+                            Finalizar Venda
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Aba Vendedores -->
+        <div id="vendedores" class="tab-content">
+            <div class="estoque-header">
+                <div class="estoque-title">
+                    <div class="title-icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="7" r="4"/>
+                            <path d="M5.5 21a6.5 6.5 0 0 1 13 0"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <h2>Gestão de Vendedores</h2>
+                        <p>Cadastre e gerencie seus vendedores</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="estoque-grid">
+                <div class="form-card">
+                    <div class="card-header">
+                        <div class="card-icon">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="7" r="4"/>
+                                <path d="M5.5 21a6.5 6.5 0 0 1 13 0"/>
+                            </svg>
+                        </div>
+                        <h3>Cadastrar Vendedor</h3>
+                        <div class="form-status">Pronto</div>
+                    </div>
+                    <div class="card-content">
+                        <form id="form-vendedor" class="premium-form" onsubmit="event.preventDefault(); cadastrarVendedor();">
+                            <div class="form-row">
+                                <div class="input-group">
+                                    <label for="vendedor-nome">Nome</label>
+                                    <div class="input-wrapper">
+                                        <input type="text" id="vendedor-nome" placeholder="Digite o nome" required autocomplete="name">
+                                        <span class="input-icon">
+                                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <circle cx="12" cy="7" r="4"/>
+                                                <path d="M5.5 21a6.5 6.5 0 0 1 13 0"/>
+                                            </svg>
+                                        </span>
+                                    </div>
+                                    <div class="validation-message"></div>
+                                </div>
+                                <div class="input-group">
+                                    <label for="vendedor-contato">Contato (opcional)</label>
+                                    <div class="input-wrapper">
+                                        <input type="text" id="vendedor-contato" placeholder="Telefone ou email" autocomplete="tel">
+                                        <span class="input-icon">
+                                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.8 19.8 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.8 19.8 0 0 1-3.07-8.63A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.12.9.32 1.77.58 2.6a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.48-1.15a2 2 0 0 1 2.11-.45c.83.26 1.7.46 2.6.58A2 2 0 0 1 22 16.92z"/>
+                                            </svg>
+                                        </span>
+                                    </div>
+                                    <div class="validation-message"></div>
+                                </div>
+                                <div class="input-group">
+                                    <label for="vendedor-status">Status</label>
+                                    <div class="select-wrapper">
+                                        <select id="vendedor-status">
+                                            <option value="ativo">Ativo</option>
+                                            <option value="ferias">Férias</option>
+                                            <option value="inativo">Inativo</option>
+                                        </select>
+                                        <div class="select-icon">
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <polyline points="6,9 12,15 18,9"/>
+                                            </svg>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-actions">
+                                <button type="reset" class="btn-secondary">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M3 12a9 9 0 1 0 9-9"/>
+                                        <polyline points="3 3 3 9 9 9"/>
+                                    </svg>
+                                    Limpar
+                                </button>
+                                <button type="submit" class="btn-primary">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <polyline points="20,6 9,17 4,12"/>
+                                    </svg>
+                                    Cadastrar Vendedor
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="lista-card">
+                    <div class="card-header">
+                        <div class="card-icon">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+                                <line x1="8" y1="21" x2="16" y2="21"/>
+                                <line x1="12" y1="17" x2="12" y2="21"/>
+                            </svg>
+                        </div>
+                        <h3>Lista de Vendedores</h3>
+                        <div class="card-badge"><span id="contador-vendedores">0 vendedores</span></div>
+                    </div>
+                    <div class="card-content">
+                        <div id="vendedores-filter-tabs" class="filter-tabs-novo" style="margin-bottom: 12px;">
+                            <button class="filter-tab-novo active" data-status="todos" onclick="filtrarVendedoresStatus('todos', this)">Todos</button>
+                            <button class="filter-tab-novo" data-status="ativo" onclick="filtrarVendedoresStatus('ativo', this)">Ativos</button>
+                            <button class="filter-tab-novo" data-status="ferias" onclick="filtrarVendedoresStatus('ferias', this)">Férias</button>
+                            <button class="filter-tab-novo" data-status="inativo" onclick="filtrarVendedoresStatus('inativo', this)">Inativos</button>
+                        </div>
+                        <div id="vendedores-lista" class="carrinho-lista vendedores-lista">
+                            <div class="empty-cart">
+                                <p>Nenhum vendedor cadastrado</p>
+                                <small>Adicione vendedores no formulário ao lado</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Aba Estoque -->
+        <div id="estoque" class="tab-content">
+            <div class="estoque-header novo">
+                <div class="estoque-title">
+                    <div class="title-icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+                            <polyline points="3.27,6.96 12,12.01 20.73,6.96"/>
+                            <line x1="12" y1="22.08" x2="12" y2="12"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <h2>Controle de Estoque</h2>
+                        <p>Operações, análise e auditoria</p>
+                    </div>
+                </div>
+
+                
+
+                
+                
+                <div class="estoque-stats avancado">
+                    <div class="stat-card">
+                        <div class="stat-icon">📦</div>
+                        <div class="stat-info">
+                            <div class="stat-number" id="total-itens-estoque">0</div>
+                            <div class="stat-label">Unidades totais</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">⚠️</div>
+                        <div class="stat-info">
+                            <div class="stat-number" id="alertas-estoque">0</div>
+                            <div class="stat-label">Alertas ativos</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">💎</div>
+                        <div class="stat-info">
+                            <div class="stat-number" id="valor-inventario">R$ 0</div>
+                            <div class="stat-label">Valor do inventário</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">📊</div>
+                        <div class="stat-info">
+                            <div class="stat-number" id="rotatividade-estoque">0%</div>
+                            <div class="stat-label">Rotatividade (30d)</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="estoque-grid novo">
+                <!-- Entrada Rápida posicionada acima de Pesquisa e Filtros -->
+                <div id="entrada-rapida" class="painel entrada-rapida" data-tipo="entrada">
+                    <div class="card-header">
+                        <div class="card-header-left" style="display:flex;align-items:center;gap:.5rem;">
+                            <div class="card-icon" id="mov-icon">⬆️</div>
+                            <h3 id="mov-titulo">Registrar Entrada</h3>
+                        </div>
+                        <div class="tipo-toggle" role="tablist" aria-label="Tipo de movimentação">
+                            <button type="button" class="tipo-btn active" aria-selected="true" title="Atalho: E" onclick="sistema.setTipoMovRapido('entrada')">Entrada</button>
+                            <button type="button" class="tipo-btn" aria-selected="false" title="Atalho: S" onclick="sistema.setTipoMovRapido('saida')">Saída</button>
+                            <button type="button" class="help-btn" title="Ver atalhos" onclick="sistema.mostrarAjudaAtalhos()">?</button>
+                        </div>
+                    </div>
+                    <div class="card-content">
+                        <form id="form-entrada-rapida" onsubmit="event.preventDefault(); sistema.confirmarEntradaRapida();">
+                            <div class="form-row">
+                                <div class="input-group">
+                                    <label for="entrada-produto">Produto</label>
+                                    <div class="select-wrapper">
+                                        <select id="entrada-produto" required>
+                                            <option value="">Selecione o produto...</option>
+                                        </select>
+                                        <div class="select-icon">
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6,9 12,15 18,9"/></svg>
+                                        </div>
+                                    </div>
+                                    <div id="stock-hint" class="stock-badge" aria-live="polite"></div>
+                                </div>
+                                <div class="input-group">
+                                    <label for="entrada-quantidade">Quantidade</label>
+                                    <div class="quantity-controls">
+                                        <button type="button" class="qty-btn minus" aria-label="Diminuir" onclick="sistema.alterarQuantidade(-1)">−</button>
+                                        <input type="number" id="entrada-quantidade" min="1" step="1" placeholder="1" required>
+                                        <button type="button" class="qty-btn plus" aria-label="Aumentar" onclick="sistema.alterarQuantidade(1)">+</button>
+                                    </div>
+                                    <div id="qtd-feedback" class="input-feedback" aria-live="polite"></div>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="input-group" style="flex: 1;">
+                                    <label for="entrada-observacao">Observação (opcional)</label>
+                                    <div class="input-wrapper">
+                                        <input type="text" id="entrada-observacao" placeholder="Ex.: reposição, lote X">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-actions">
+                                <button type="button" class="btn-secondary" onclick="sistema.limparEntradaRapida()">Cancelar</button>
+                                <button type="submit" id="mov-btn-confirm" class="btn-primary" title="Atalho: Ctrl+Enter"><span id="mov-btn-text">Confirmar Entrada</span></button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                <div class="painel filtros">
+                    <div class="card-header">
+                        <div class="card-icon">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="11" cy="11" r="8"/>
+                                <path d="M21 21l-4.35-4.35"/>
+                            </svg>
+                        </div>
+                        <h3>Pesquisa e Filtros</h3>
+                    </div>
+                    <div class="card-content">
+                        <div class="search-container">
+                            <input type="text" id="buscar-produto" placeholder="Digite o nome do produto..." class="search-input" list="sugestoes-estoque">
+                            <datalist id="sugestoes-estoque"></datalist>
+                            <button onclick="buscarProdutosPorNome()" class="search-btn">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="11" cy="11" r="8"/>
+                                    <path d="M21 21l-4.35-4.35"/>
+                                </svg>
+                                Buscar
+                            </button>
+                        </div>
+                        <div class="filters-row">
+                            <div class="filter-item">
+                                <label for="categoria-filtro-estoque">Categoria</label>
+                                <select id="categoria-filtro-estoque">
+                                    <option value="todas">Todas</option>
+                                </select>
+                            </div>
+                            <div class="filter-item">
+                                <label for="preco-min-estoque">Preço mín.</label>
+                                <input type="number" id="preco-min-estoque" min="0" step="0.01" placeholder="0,00">
+                            </div>
+                            <div class="filter-item">
+                                <label for="preco-max-estoque">Preço máx.</label>
+                                <input type="number" id="preco-max-estoque" min="0" step="0.01" placeholder="—">
+                            </div>
+                        </div>
+                        <div class="filter-tabs-novo">
+                            <button class="filter-tab-novo active" onclick="filtrarProdutos('todos', this)">Todos</button>
+                            <button class="filter-tab-novo" onclick="filtrarProdutos('baixo-estoque', this)">Baixo Estoque</button>
+                            <button class="filter-tab-novo" onclick="filtrarProdutos('sem-estoque', this)">Sem Estoque</button>
+                            <button class="filter-tab-novo" onclick="filtrarProdutos('disponivel', this)">Disponíveis</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="painel analise">
+                    <div class="card-header">
+                        <div class="card-icon">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="18" y1="20" x2="18" y2="10"/>
+                                <line x1="12" y1="20" x2="12" y2="4"/>
+                                <line x1="6" y1="20" x2="6" y2="14"/>
+                            </svg>
+                        </div>
+                        <h3>Análise Rápida</h3>
+                    </div>
+                    <div class="card-content">
+                        <div class="analise-grid">
+                            <div class="analise-card-mini">
+                                <div class="section-title">Por Categoria</div>
+                                <div class="chart-wrapper"><canvas id="grafico-estoque-categorias"></canvas></div>
+                            </div>
+                            <div class="analise-card-mini">
+                                <div class="section-title">Status do Estoque</div>
+                                <div class="chart-wrapper"><canvas id="grafico-estoque-status"></canvas></div>
+                            </div>
+                            <div class="analise-card-mini">
+                                <div class="section-title">Valor por Categoria</div>
+                                <div class="chart-wrapper"><canvas id="grafico-estoque-valor"></canvas></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="painel lista">
+                    <div class="card-header">
+                        <div class="card-icon">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/>
+                                <rect x="8" y="2" width="8" height="4" rx="1" ry="1"/>
+                            </svg>
+                        </div>
+                        <h3>Inventário</h3>
+                        <div class="card-badge">
+                            <span id="contador-produtos">0 produtos</span>
+                        </div>
+                    </div>
+                    <div class="card-content">
+                        <div id="estoque-lista" class="produtos-lista"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="estoque-extra novo">
+                <div class="mov-card">
+                    <div class="card-header">
+                        <div class="card-icon">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M3 3v18h18"/>
+                                <path d="M8 13l3 3 7-7"/>
+                            </svg>
+                        </div>
+                        <h3>Movimentações Recentes</h3>
+                    </div>
+                    <div class="card-content">
+                        <ul id="mov-list" class="mov-list">
+                            <li class="mov-empty">Sem movimentações nos últimos 7 dias</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Aba Produtos -->
+        <div id="produtos" class="tab-content">
+            <div class="produtos-header">
+                <div class="produtos-title">
+                    <div class="title-icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <h2>Gestão de Produtos</h2>
+                        <p>Sistema Avançado de Inventário</p>
+                    </div>
+                </div>
+                <div class="produtos-stats">
+                    <div class="stat-card">
+                        <div class="stat-icon">📦</div>
+                        <div class="stat-info">
+                            <div class="stat-number" id="total-produtos">0</div>
+                            <div class="stat-label">Produtos</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">⚠️</div>
+                        <div class="stat-info">
+                            <div class="stat-number" id="produtos-baixo-estoque">0</div>
+                            <div class="stat-label">Estoque Baixo</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">💰</div>
+                        <div class="stat-info">
+                            <div class="stat-number" id="valor-total-estoque">R$ 0</div>
+                            <div class="stat-label">Valor Estoque</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="produtos-grid">
+                <div class="form-card">
+                    <div class="card-header">
+                        <div class="card-icon">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="12" y1="5" x2="12" y2="19"/>
+                                <line x1="5" y1="12" x2="19" y2="12"/>
+                            </svg>
+                        </div>
+                        <h3>Novo Produto</h3>
+                        <div class="form-status" id="form-status">Pronto</div>
+                    </div>
+                    <div class="card-content">
+                        <form id="produto-form" class="premium-form">
+                            <div class="form-row">
+                                <div class="input-group">
+                                    <label for="produto-nome">Nome do Produto</label>
+                                    <div class="input-wrapper">
+                                        <input type="text" id="produto-nome" required>
+                                        <div class="input-icon">
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+                                            </svg>
+                                        </div>
+                                        <div class="validation-message"></div>
+                                    </div>
+                                </div>
+                                <div class="input-group">
+                                    <label for="produto-categoria">Categoria</label>
+                                    <div class="select-wrapper">
+                                        <select id="produto-categoria" required>
+                                            <option value="">Selecionar categoria</option>
+                                            <option value="cigarros">🚬 Cigarros</option>
+                                            <option value="bebidas">🥤 Bebidas</option>
+                                            <option value="doces">🍬 Doces</option>
+                                            <option value="salgados">🥨 Salgados</option>
+                                            <option value="outros">📦 Outros</option>
+                                        </select>
+                                        <div class="select-icon">
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <polyline points="6,9 12,15 18,9"/>
+                                            </svg>
+                                        </div>
+                                        <div class="validation-message"></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Linha adicional: Código de Barras e Fornecedor -->
+                            <div class="form-row">
+                                <div class="input-group">
+                                    <label for="produto-codigo">Código de Barras</label>
+                                    <div class="input-wrapper">
+                                        <input type="text" id="produto-codigo" placeholder="EAN/UPC" inputmode="numeric" autocomplete="off">
+                                        <div class="validation-message"></div>
+                                    </div>
+                                </div>
+                                <div class="input-group">
+                                    <label for="produto-fornecedor">Fornecedor</label>
+                                    <div class="input-wrapper">
+                                        <input type="text" id="produto-fornecedor" placeholder="Nome do fornecedor" autocomplete="organization">
+                                        <div class="validation-message"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="input-group">
+                                    <label for="produto-custo">Custo Unitário</label>
+                                    <div class="currency-input">
+                                        <span class="currency-symbol">R$</span>
+                                        <input type="number" id="produto-custo" step="0.01" min="0" required>
+                                        <div class="validation-message"></div>
+                                    </div>
+                                </div>
+                                <div class="input-group">
+                                    <label for="produto-preco">Preço de Venda</label>
+                                    <div class="currency-input">
+                                        <span class="currency-symbol">R$</span>
+                                        <input type="number" id="produto-preco" step="0.01" min="0" required>
+                                        <div class="validation-message"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="input-group">
+                                    <label for="produto-estoque">Estoque Inicial</label>
+                                    <div class="quantity-input">
+                                        <button type="button" onclick="adjustFormQuantity('produto-estoque', -1)">-</button>
+                                        <input type="number" id="produto-estoque" min="0" value="0" required>
+                                        <button type="button" onclick="adjustFormQuantity('produto-estoque', 1)">+</button>
+                                        <div class="validation-message"></div>
+                                    </div>
+                                </div>
+                                <div class="input-group">
+                                    <label>Margem de Lucro</label>
+                                    <div class="margin-display">
+                                        <span class="margin-value" id="margem-lucro">0%</span>
+                                        <span class="margin-label">Calculado automaticamente</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Linha adicional: Estoque Mínimo e Descrição -->
+                            <div class="form-row">
+                                <div class="input-group">
+                                    <label for="produto-minimo">Estoque Mínimo</label>
+                                    <div class="quantity-input">
+                                        <button type="button" onclick="adjustFormQuantity('produto-minimo', -1)">-</button>
+                                        <input type="number" id="produto-minimo" min="0" value="0">
+                                        <button type="button" onclick="adjustFormQuantity('produto-minimo', 1)">+</button>
+                                        <div class="validation-message"></div>
+                                    </div>
+                                </div>
+                                <div class="input-group">
+                                    <label for="produto-descricao">Descrição do Produto</label>
+                                    <div class="input-wrapper">
+                                        <textarea id="produto-descricao" rows="3" placeholder="Características, especificações, materiais e recomendações de uso."></textarea>
+                                        <div class="validation-message"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="form-actions">
+                                <button type="button" class="btn-secondary" onclick="limparFormulario()">Limpar</button>
+                                <button type="submit" class="btn-primary">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <polyline points="20,6 9,17 4,12"/>
+                                    </svg>
+                                    Cadastrar Produto
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="lista-card">
+                    <div class="card-header">
+                        <div class="card-icon">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M9 11H5a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7a2 2 0 0 0-2-2h-4m-4-4v8m0-8l3 3m-3-3l-3 3"/>
+                            </svg>
+                        </div>
+                        <h3>Inventário</h3>
+                        <div class="search-wrapper">
+                            <input type="text" id="search-produtos" placeholder="Buscar produtos..." list="sugestoes-inventario">
+                            <datalist id="sugestoes-inventario"></datalist>
+                            <div class="search-icon">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="11" cy="11" r="8"/>
+                                    <path d="m21 21-4.35-4.35"/>
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-content">
+                        <div class="filters-row">
+                            <div class="filter-item">
+                                <label for="categoria-filtro-inventario">Categoria</label>
+                                <select id="categoria-filtro-inventario">
+                                    <option value="todas">Todas</option>
+                                </select>
+                            </div>
+                            <div class="filter-item">
+                                <label for="preco-min-inventario">Preço mín.</label>
+                                <input type="number" id="preco-min-inventario" min="0" step="0.01" placeholder="0,00">
+                            </div>
+                            <div class="filter-item">
+                                <label for="preco-max-inventario">Preço máx.</label>
+                                <input type="number" id="preco-max-inventario" min="0" step="0.01" placeholder="—">
+                            </div>
+                        </div>
+                        <div class="filter-tabs">
+                            <button class="filter-tab active" onclick="filtrarProdutos('todos')">Todos</button>
+                            <button class="filter-tab" onclick="filtrarProdutos('baixo-estoque')">Estoque Baixo</button>
+                            <button class="filter-tab" onclick="filtrarProdutos('sem-estoque')">Sem Estoque</button>
+                        </div>
+                        <div id="produtos-lista" class="produtos-grid-lista"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Aba Relatórios -->
+        <div id="relatorios" class="tab-content">
+            <div class="relatorios-header">
+                <div class="header-content">
+                    <div class="header-icon">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="18" y1="20" x2="18" y2="10"/>
+                            <line x1="12" y1="20" x2="12" y2="4"/>
+                            <line x1="6" y1="20" x2="6" y2="14"/>
+                        </svg>
+                    </div>
+                    <div class="header-text">
+                        <h2 class="relatorios-title">Relatórios Financeiros</h2>
+                        <p class="relatorios-subtitle">Análise completa do desempenho da sua loja</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="relatorios-stats">
+                <div class="stat-card vendas">
+                    <div class="stat-icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="12" y1="1" x2="12" y2="23"/>
+                            <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                        </svg>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-label">Vendas Hoje</div>
+                        <div class="stat-value" id="vendas-hoje-valor">R$ 0,00</div>
+                        <div class="stat-change positive">+12% vs ontem</div>
+                    </div>
+                </div>
+
+                <div class="stat-card gastos">
+                    <div class="stat-icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/>
+                            <rect x="8" y="2" width="8" height="4" rx="1" ry="1"/>
+                            <path d="M12 11h4"/>
+                            <path d="M12 16h4"/>
+                            <path d="M8 11h.01"/>
+                            <path d="M8 16h.01"/>
+                        </svg>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-label">Gastos Hoje</div>
+                        <div class="stat-value" id="gastos-hoje">R$ 0,00</div>
+                        <div class="stat-change negative">-5% vs ontem</div>
+                    </div>
+                </div>
+
+                <div class="stat-card lucro">
+                    <div class="stat-icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="22,12 18,12 15,21 9,3 6,12 2,12"/>
+                        </svg>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-label">Lucro Hoje</div>
+                        <div class="stat-value" id="lucro-hoje">R$ 0,00</div>
+                        <div class="stat-change positive">+18% vs ontem</div>
+                    </div>
+                </div>
+
+                <!-- Card: Margem Média -->
+                <div class="stat-card margem">
+                        <div class="stat-icon">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"/>
+                                <polyline points="12,6 12,12 16,14"/>
+                            </svg>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-label">Margem Média</div>
+                            <div class="stat-value" id="margem-media">25%</div>
+                            <div class="stat-change positive">+2% vs ontem</div>
+                        </div>
+                </div>
+
+                <!-- Card: Quantidade de Vendas -->
+                <div class="stat-card quantidade">
+                    <div class="stat-icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="4" width="6" height="6"/>
+                            <rect x="15" y="4" width="6" height="6"/>
+                            <rect x="3" y="14" width="6" height="6"/>
+                            <rect x="15" y="14" width="6" height="6"/>
+                        </svg>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-label">Quantidade de Vendas</div>
+                        <div class="stat-value" id="quantidade-hoje">0</div>
+                        <div class="stat-change positive">Atualizado</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="relatorios-grid">
+                <div class="relatorio-filtros">
+                    <div class="filtros-header">
+                        <h3>Filtrar Período</h3>
+                        <div class="filtros-icon">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="11" cy="11" r="8"/>
+                                <path d="M21 21l-4.35-4.35"/>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="filtros-container">
+                        <div class="input-group">
+                            <label for="data-inicio">Data Início</label>
+                            <input type="date" id="data-inicio" value="">
+                        </div>
+                        <div class="input-group">
+                            <label for="data-fim">Data Fim</label>
+                            <input type="date" id="data-fim" value="">
+                        </div>
+                        <div class="input-group">
+                            <label for="vendedor-relatorio-select">Vendedor</label>
+                            <div class="select-wrapper">
+                                <select id="vendedor-relatorio-select">
+                                    <option value="">Todos os vendedores</option>
+                                </select>
+                                <div class="select-icon">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <polyline points="6,9 12,15 18,9"/>
+                                    </svg>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="filtros-actions">
+                            <button class="btn-primary" onclick="filtrarRelatorio()">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="11" cy="11" r="8"/>
+                                    <path d="M21 21l-4.35-4.35"/>
+                                </svg>
+                                Filtrar
+                            </button>
+                            <button class="btn-secondary" onclick="limparFiltro()">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M3 6h18"/>
+                                    <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/>
+                                    <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
+                                </svg>
+                                Limpar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="historico-vendas">
+                    <div class="historico-header">
+                        <h3>Histórico de Vendas</h3>
+                        <div class="historico-actions">
+                            <button class="btn-download-pdf" onclick="baixarHistoricoPDF()" title="Baixar Histórico em PDF">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                                    <polyline points="7,10 12,15 17,10"/>
+                                    <line x1="12" y1="15" x2="12" y2="3"/>
+                                </svg>
+                                PDF
+                            </button>
+                            <div class="historico-icon">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                                    <polyline points="14,2 14,8 20,8"/>
+                                    <line x1="16" y1="13" x2="8" y2="13"/>
+                                    <line x1="16" y1="17" x2="8" y2="17"/>
+                                    <polyline points="10,9 9,9 8,9"/>
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="historico-content">
+                        <div id="historico-lista"></div>
+                    </div>
+                </div>
+                <!-- Resumo do Período -->
+                <div class="relatorio-resumo">
+                    <div class="filtros-header">
+                        <h3>Resumo do Período</h3>
+                        <div class="filtros-icon">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"/>
+                                <path d="M12 6v6l4 2"/>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="historico-content">
+                        <div class="financeiro-resumo">
+                            <div class="resumo-row"><span>Total de Vendas</span><span id="periodo-total-vendas">R$ 0,00</span></div>
+                            <div class="resumo-row"><span>Quantidade de Vendas</span><span id="periodo-quantidade-vendas">0</span></div>
+                            <div class="resumo-row"><span>Ticket Médio</span><span id="periodo-ticket-medio">R$ 0,00</span></div>
+                            <div class="resumo-row"><span>Lucro Total</span><span id="periodo-lucro-total">R$ 0,00</span></div>
+                        </div>
+                        <div class="financeiro-resumo pagamento-detalhes">
+                            <div class="section-title">Formas de Pagamento</div>
+                            <div class="pagamento-row"><span>Dinheiro</span><span id="pagamento-dinheiro">0 vendas • R$ 0,00</span></div>
+                            <div class="pagamento-row"><span>Crédito</span><span id="pagamento-credito">0 vendas • R$ 0,00</span></div>
+                            <div class="pagamento-row"><span>Débito</span><span id="pagamento-debito">0 vendas • R$ 0,00</span></div>
+                            <div class="pagamento-row"><span>PIX</span><span id="pagamento-pix">0 vendas • R$ 0,00</span></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Produtos Mais Vendidos -->
+                <div class="relatorio-top-produtos">
+                    <div class="filtros-header">
+                        <h3>Produtos Mais Vendidos</h3>
+                        <div class="filtros-icon">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="6,9 12,15 18,9"/>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="historico-content">
+                        <div id="lista-top-produtos" class="itens-lista"></div>
+                    </div>
+                </div>
+
+                <!-- Vendas por Dia -->
+                <div class="relatorio-vendas-periodo">
+                    <div class="filtros-header">
+                        <h3>Vendas por Dia</h3>
+                        <div class="filtros-icon">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="18" y1="20" x2="18" y2="10"/>
+                                <line x1="12" y1="20" x2="12" y2="4"/>
+                                <line x1="6" y1="20" x2="6" y2="14"/>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="historico-content">
+                        <div class="chart-wrapper">
+                            <canvas id="grafico-vendas-dia"></canvas>
+                        </div>
+                        <div id="lista-vendas-periodo" class="itens-lista"></div>
+                    </div>
+                </div>
+
+                <!-- Análise Detalhada -->
+                <div class="relatorio-analitico">
+                    <div class="filtros-header">
+                        <h3>Análise Detalhada</h3>
+                        <div class="filtros-icon">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"/>
+                                <path d="M8 12h8"/>
+                                <path d="M12 8v8"/>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="historico-content">
+                        <div class="analise-grid">
+                            <div class="analise-card">
+                                <div class="section-title">Desempenho por Vendedor</div>
+                                <div id="lista-vendedores-analise" class="itens-lista"></div>
+                            </div>
+                            <div class="analise-card">
+                                <div class="section-title">Distribuição por Categoria</div>
+                                <div class="chart-wrapper"><canvas id="grafico-categorias"></canvas></div>
+                                <div id="lista-categorias-analise" class="itens-lista"></div>
+                            </div>
+                            <div class="analise-card">
+                                <div class="section-title">Horários de Pico</div>
+                                <div class="chart-wrapper"><canvas id="grafico-horarios"></canvas></div>
+                            </div>
+                            <div class="analise-card">
+                                <div class="section-title">Formas de Pagamento</div>
+                                <div class="chart-wrapper"><canvas id="grafico-pagamentos"></canvas></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Confirmação Melhorado -->
+    <div id="modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="fecharModal()">&times;</span>
+            <div id="modal-body"></div>
+        </div>
+    </div>
+
+    <!-- Container para Toast Notifications -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <!-- Firebase (Real-time, Auth) -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+    <script>
+      // Configure aqui com suas credenciais (produção/ambiente real).
+      // Também aceitamos configuração via localStorage na chave 'firebase_config'.
+      window.FIREBASE_CONFIG = window.FIREBASE_CONFIG || {
+        apiKey: "",
+        authDomain: "",
+        projectId: "",
+        storageBucket: "",
+        messagingSenderId: "",
+        appId: ""
+      };
+    </script>
+    <!-- Biblioteca para geração de QR Code -->
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
+    <!-- Botão flutuante de acesso rápido -->
+    <button id="quick-access-btn" class="quick-access-btn" onclick="sistema.abrirCommandPalette()" title="Abrir atalhos (Ctrl+K)">⚡ Atalhos</button>
+
+    <!-- Paleta de Comandos -->
+    <div id="cmdk-overlay" class="cmdk-overlay" style="display:none;">
+        <div class="cmdk-container" role="dialog" aria-modal="true" aria-labelledby="cmdk-title">
+            <div class="cmdk-header">
+                <input id="cmdk-input" type="text" placeholder="Digite para navegar ou executar" aria-label="Pesquisar comando">
+                <button class="cmdk-close" aria-label="Fechar" onclick="sistema.fecharCommandPalette()">×</button>
+            </div>
+            <ul id="cmdk-list" class="cmdk-list" role="listbox"></ul>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
