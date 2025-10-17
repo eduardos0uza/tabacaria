@@ -9,6 +9,8 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="format-detection" content="telephone=no,email=no,address=no">
     <title>Sistema de Gestão - HidenSystems</title>
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
     <link rel="stylesheet" href="styles.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style id="login-gate-styles">
@@ -1369,8 +1371,7 @@
         appId: ""
       };
     </script>
-    <!-- Biblioteca para geração de QR Code -->
-    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
+    <!-- QRCode: carregado sob demanda quando pagamento PIX é usado -->
     <!-- Botão flutuante de acesso rápido -->
     <button id="quick-access-btn" class="quick-access-btn" onclick="sistema.abrirCommandPalette()" title="Abrir atalhos (Ctrl+K)">⚡ Atalhos</button>
 

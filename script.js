@@ -541,12 +541,34 @@ class SistemaTabacaria {
         const codeEl = document.getElementById('pix-code');
         if (codeEl) codeEl.value = payload;
         const canvas = document.getElementById('pix-qr');
-        if (canvas && window.QRCode) {
+        const renderQR = () => {
+            if (!canvas) return;
             try {
                 window.QRCode.toCanvas(canvas, payload, { width: 180, margin: 1 }, (err) => {
                     if (err) console.error('Falha ao gerar QR:', err);
                 });
             } catch (e) { console.warn('QR lib indisponível:', e); }
+        };
+        if (canvas) {
+            if (window.QRCode) {
+                renderQR();
+            } else {
+                try {
+                    const existing = document.querySelector('script[data-qr-lib]');
+                    if (!existing) {
+                        const s = document.createElement('script');
+                        s.src = 'https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js';
+                        s.async = true; s.defer = true; s.dataset.qrLib = '1'; s.crossOrigin = 'anonymous';
+                        s.onload = renderQR;
+                        s.onerror = (e) => console.error('Falha ao carregar QR lib:', e);
+                        document.head.appendChild(s);
+                    } else {
+                        existing.addEventListener('load', renderQR, { once: true });
+                    }
+                } catch (e) {
+                    console.warn('Não foi possível carregar QR lib dinamicamente:', e);
+                }
+            }
         }
     }
 
@@ -4192,10 +4214,15 @@ function showTab(tabName) {
         
         allTabs.forEach(tab => {
             tab.classList.remove('active');
+            tab.setAttribute('aria-hidden', 'true');
         });
         
         // 2. Remover classe active de todos os botões
-        allButtons.forEach(btn => btn.classList.remove('active'));
+        allButtons.forEach(btn => {
+            btn.classList.remove('active');
+            btn.setAttribute('aria-selected', 'false');
+            btn.setAttribute('tabindex', '-1');
+        });
         
         // 3. Mostrar aba selecionada
         const targetTab = document.getElementById(tabName);
@@ -4203,7 +4230,11 @@ function showTab(tabName) {
         
         if (targetTab && targetButton) {
             targetTab.classList.add('active');
+            targetTab.setAttribute('aria-hidden', 'false');
             targetButton.classList.add('active');
+            targetButton.setAttribute('aria-selected', 'true');
+            targetButton.setAttribute('tabindex', '0');
+            try { targetButton.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' }); } catch (_) {}
             
             console.log(`✅ Aba ${tabName} ativada com sucesso`);
             
@@ -4267,6 +4298,37 @@ function showTab(tabName) {
 }
 
 // Inicializar sistema
+document.addEventListener('DOMContentLoaded', function() {
+  try {
+    const tabsEl = document.querySelector('.tabs');
+    if (tabsEl) tabsEl.setAttribute('role', 'tablist');
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.setAttribute('role', 'tab');
+      const onclick = btn.getAttribute('onclick') || '';
+      const m = onclick.match(/showTab\('(\w+)'\)/);
+      if (m && m[1]) {
+        const panelId = m[1];
+        if (!btn.id) btn.id = 'tabbtn-' + panelId;
+        btn.setAttribute('aria-controls', panelId);
+        const panelEl = document.getElementById(panelId);
+        if (panelEl) {
+          panelEl.setAttribute('role', 'tabpanel');
+          panelEl.setAttribute('aria-labelledby', btn.id);
+          if (panelEl.classList.contains('active')) {
+            panelEl.setAttribute('aria-hidden', 'false');
+            btn.setAttribute('aria-selected', 'true');
+            btn.setAttribute('tabindex', '0');
+          } else {
+            panelEl.setAttribute('aria-hidden', 'true');
+            btn.setAttribute('aria-selected', 'false');
+            btn.setAttribute('tabindex', '-1');
+          }
+        }
+      }
+    });
+  } catch (e) { console.warn('ARIA init falhou:', e); }
+});
+
 const sistema = new SistemaTabacaria();
 
 // Métodos de autenticação (UI + lógica local)

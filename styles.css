@@ -321,6 +321,8 @@ header::before {
     gap: var(--spacing-xs);
     overflow-x: auto;
     position: relative;
+    -webkit-overflow-scrolling: touch;
+    scroll-snap-type: x proximity;
 }
 
 .tabs::before {
@@ -1865,6 +1867,9 @@ button:active {
     .produtos-grid {
         grid-template-columns: 1fr;
     }
+
+    /* Render otimizado em seções tabuladas */
+    .tab-content { content-visibility: auto; contain-intrinsic-size: 480px; }
 }
 
 @media (max-width: 480px) {
@@ -1911,6 +1916,10 @@ button:active {
     }
     .card-content, .produto-card, .carrinho-card {
         padding: var(--spacing-md);
+    }
+    .produto-card, .carrinho-card, .pagamento-card {
+        backdrop-filter: none;
+        box-shadow: var(--shadow-md);
     }
     .search-input, input, select, textarea {
         font-size: 16px; /* evita zoom em iOS */
@@ -2115,6 +2124,7 @@ button:active {
     box-shadow: var(--shadow-lg);
     overflow: hidden;
     border: 1px solid var(--gray-200);
+    min-width: 0;
 }
 
 /* Diferenciação visual da aba Estoque */
@@ -4355,4 +4365,10 @@ button, .tab-btn, .acao-btn, .btn-edit, .btn-delete, .search-btn, .add-item-btn,
   .header-right { justify-content: space-between; }
   .header-stats { flex-wrap: wrap; gap: var(--spacing-md); }
   .stat-item { flex: 1 1 160px; min-width: calc(50% - var(--spacing-md)); }
+
+  /* Sticky navegação e padding seguro de conteúdo */
+  .tabs { position: sticky; top: max(env(safe-area-inset-top), 0px); z-index: 1000; background: white; }
+  .tab-btn { scroll-snap-align: center; }
+  .tab-content { padding-bottom: calc(env(safe-area-inset-bottom) + 88px); }
+  .container { padding-top: max(var(--spacing-sm), env(safe-area-inset-top)); padding-bottom: max(var(--spacing-sm), env(safe-area-inset-bottom)); }
 }
