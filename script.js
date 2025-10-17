@@ -140,12 +140,15 @@ class SistemaTabacaria {
         // Atalhos globais (navegação e ações rápidas)
         document.addEventListener('keydown', (e) => {
             const key = (e.key || '').toLowerCase();
+            const target = e.target || e.srcElement;
+            const isInputEl = target && ((target.tagName === 'INPUT') || (target.tagName === 'TEXTAREA') || target.isContentEditable);
             if (e.ctrlKey && key === 'k') {
                 e.preventDefault();
                 this.abrirCommandPalette();
             }
             if (!e.ctrlKey && !e.altKey && !e.metaKey) {
-                if (key === 'e') { // Entrada
+                if (isInputEl) return; // não interferir enquanto digitando em campos
+                if (key === 'i') { // Entrada (remapeado para I)
                     showTab('estoque');
                     this.setTipoMovRapido('entrada');
                     this.focarEntradaRapida();
@@ -153,6 +156,10 @@ class SistemaTabacaria {
                     showTab('estoque');
                     this.setTipoMovRapido('saida');
                     this.focarEntradaRapida();
+                } else if (key === 'e') { // Cadastro rápido de produto
+                    showTab('produtos');
+                    const n = document.getElementById('produto-nome');
+                    if (n) { try { n.scrollIntoView({behavior:'smooth',block:'center'}); } catch(_){} n.focus(); }
                 }
             }
             if (e.ctrlKey && key === 'enter') {
@@ -1786,7 +1793,7 @@ class SistemaTabacaria {
     }
 
     mostrarAjudaAtalhos() {
-        const msg = `Atalhos disponíveis:\n\n• E: alterna para Entrada\n• S: alterna para Saída\n• Ctrl+Enter: confirmar\n• Ctrl+K: abrir paleta de comandos`;
+        const msg = `Atalhos disponíveis:\n\n• I: alterna para Entrada\n• S: alterna para Saída\n• E: cadastro rápido de Produto\n• Ctrl+Enter: confirmar\n• Ctrl+K: abrir paleta de comandos`;
         this.mostrarModal('Atalhos', msg, 'info');
     }
 
