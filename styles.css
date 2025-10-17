@@ -250,6 +250,10 @@ header::before {
 /* Stats Section */
 .header-right {
     flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-lg);
+    justify-content: flex-end;
 }
 
 .header-stats {

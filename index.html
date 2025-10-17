@@ -11,8 +11,121 @@
     <title>Sistema de Gestão - HidenSystems</title>
     <link rel="stylesheet" href="styles.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style id="login-gate-styles">
+      /* Login Gate - Professional Theme */
+      body.gate-open { height: 100vh; overflow: hidden; }
+      body.gate-open .container { visibility: hidden; }
+      .login-gate {
+        position: fixed; inset: 0; display: none; align-items: center; justify-content: center; z-index: 9999;
+        background: radial-gradient(1200px 600px at 50% -200px, #1e40af 0%, #0f172a 60%, #0b1220 100%);
+      }
+      .login-card {
+        width: 100%; max-width: 460px; padding: 24px 24px 20px; border-radius: 16px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        box-shadow: 0 20px 60px rgba(0,0,0,0.45), 0 0 0 1px rgba(255,255,255,0.06) inset;
+        background: #0b1020; color: #e5e7eb;
+      }
+      .login-card h2 { margin: 0 0 8px; font-size: 22px; font-weight: 600; letter-spacing: .2px; color: #f8fafc; }
+      .login-card p { color: #94a3b8; }
+      .login-card .input-group { margin: 10px 0 12px; }
+      .login-card .input-group label { display: block; margin-bottom: 6px; font-size: 13px; color: #cbd5e1; }
+      .login-card .input-group input {
+        width: 100%; padding: 10px 12px; border-radius: 10px; border: 1px solid #334155; background: #0b1220; color: #e5e7eb; outline: none;
+      }
+      .login-card .input-group input:focus { border-color: #1e40af; box-shadow: 0 0 0 3px rgba(30,64,175,0.25); }
+      .login-card .input-row { display:flex; align-items:center; justify-content:space-between; margin: 8px 0 16px; }
+      .login-card a { color: #60a5fa; text-decoration: none; }
+      .login-card a:hover { text-decoration: underline; }
+      .login-card .notification-actions { margin-top: 8px; }
+      .login-card .notification-actions .btn-notification.primary { width: 100%; padding: 10px 14px; border-radius: 10px; border: none; background: linear-gradient(90deg,#2563eb,#1e40af); color: #fff; }
+      .error-message { color: #fca5a5; }
+    </style>
+    <style id="auth-header-styles">
+        .account-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .user-badge {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 6px 10px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.14);
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+        .user-badge .avatar {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            color: white;
+            box-shadow: 0 2px 8px rgba(59, 130, 246, 0.4);
+        }
+        .user-email {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #fff;
+            letter-spacing: 0.2px;
+            text-transform: none !important;
+            opacity: 0.95;
+            max-width: 220px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .logout-btn {
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            background: rgba(255, 255, 255, 0.2);
+            color: #fff;
+            padding: 6px 12px;
+            border-radius: 999px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            backdrop-filter: blur(6px);
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+        .logout-btn:hover {
+            background: rgba(255, 255, 255, 0.35);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+        .logout-btn:active { transform: translateY(0); }
+    </style>
 </head>
 <body>
+    <div id="login-gate" class="login-gate" style="position:fixed; inset:0; display:none; align-items:center; justify-content:center; z-index:9999;">
+        <div class="login-card" role="dialog" aria-labelledby="login-title" aria-modal="true">
+            <h2 id="login-title" style="margin:0 0 8px; font-size:20px;">Acesso ao Sistema</h2>
+            <p style="margin:0 0 16px; color:#555;">Entre para acessar o conteúdo.</p>
+            <div class="input-group">
+                <label for="login-identity">Email ou usuário</label>
+                <input type="text" id="login-identity" autocomplete="username email" placeholder="seu@email.com">
+            </div>
+            <div class="input-group">
+                <label for="login-password">Senha</label>
+                <input type="password" id="login-password" autocomplete="current-password" placeholder="••••••••">
+            </div>
+            <div class="input-row" style="display:flex; align-items:center; justify-content:space-between; margin:8px 0 16px;">
+                <label style="display:flex; gap:8px; align-items:center;">
+                    <input type="checkbox" id="login-remember" checked>
+                    Lembrar-me
+                </label>
+                <a href="#" onclick="sistema.abrirModalLogin(); setTimeout(() => document.getElementById('tab-reset')?.click(), 50); return false;">Esqueci minha senha</a>
+            </div>
+            <div class="notification-actions">
+                <button class="btn-notification primary" onclick="sistema.processLoginGate()">Acessar</button>
+            </div>
+            <p id="login-error" class="error-message" style="display:none;color:#c0392b;margin-top:8px;"></p>
+        </div>
+    </div>
     <div class="container">
         <header>
             <div class="header-content">
@@ -67,6 +180,19 @@
                                 <span class="stat-label">Vendas Hoje</span>
                                 <span class="stat-value" id="total-vendas">R$ 0,00</span>
                             </div>
+                        </div>
+                    </div>
+                    <div class="account-actions">
+                        <button id="btn-login" class="btn-notification primary" onclick="sistema.abrirModalLogin()">Entrar</button>
+                        <div id="user-info" style="display:none;" class="user-badge">
+                            <div class="avatar" aria-hidden="true">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="12" cy="8" r="4"/>
+                                    <path d="M4 20c0-4 4-7 8-7s8 3 8 7"/>
+                                </svg>
+                            </div>
+                            <span id="user-email" class="user-email"></span>
+                            <button id="btn-logout" class="logout-btn" onclick="sistema.logout()">Sair</button>
                         </div>
                     </div>
                 </div>
@@ -925,6 +1051,14 @@
                         <p class="relatorios-subtitle">Análise completa do desempenho da sua loja</p>
                     </div>
                 </div>
+            </div>
+
+            <div class="relatorios-actions" style="display:flex; gap:8px; justify-content:center; margin: 0.5rem 0 1rem;">
+                <button class="btn-notification secondary" onclick="sistema.exportarBackupJSON()">Exportar Backup</button>
+                <label class="btn-notification primary" style="cursor:pointer;">
+                    Importar Backup
+                    <input type="file" accept="application/json" style="display:none" onchange="sistema.importarBackupJSON(this.files[0])" />
+                </label>
             </div>
 
             <div class="relatorios-stats">

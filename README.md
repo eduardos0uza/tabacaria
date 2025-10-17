@@ -9,10 +9,10 @@ Este projeto implementa uma estrutura que:
 ## Como usar em localhost
 
 - Gerar snapshot manual:
-  - `powershell -ExecutionPolicy Bypass -File .\\snapshot.ps1`
+  - `powershell -ExecutionPolicy Bypass -File .\snapshot.ps1`
   - Gera `snapshots/site-YYYYMMDD-HHMMSS.zip` e, se Git estiver disponível, faz commit + tag.
 - Monitorar alterações e salvar automaticamente:
-  - `powershell -ExecutionPolicy Bypass -File .\\watch_and_snapshot.ps1`
+  - `powershell -ExecutionPolicy Bypass -File .\watch_and_snapshot.ps1`
   - Observa mudanças no diretório e cria snapshots com debounce (2s).
 
 ## Git local (opcional, recomendado)

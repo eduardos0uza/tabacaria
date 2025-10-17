@@ -177,10 +177,14 @@ class SistemaTabacaria {
             const cfg = this._obterFirebaseConfig();
             if (!cfg || !cfg.projectId) {
                 console.warn('Firebase não configurado. Mantendo modo local.');
+                this.sync.enabled = false;
+                try { this._atualizarStatusSync && this._atualizarStatusSync(); } catch (_) {}
                 return;
             }
             if (typeof firebase === 'undefined') {
                 console.warn('Bibliotecas Firebase não carregadas.');
+                this.sync.enabled = false;
+                try { this._atualizarStatusSync && this._atualizarStatusSync(); } catch (_) {}
                 return;
             }
             this.sync.config = cfg;
@@ -196,15 +200,21 @@ class SistemaTabacaria {
                 this.sync.user = cred.user;
                 this.sync.enabled = true;
                 console.log('Sync habilitado (usuário anônimo).');
+                try { this._atualizarStatusSync && this._atualizarStatusSync(); } catch (_) {}
                 // Listeners principais
                 this._listenRemoteProdutos();
                 this._listenRemoteMovimentos();
                 this._listenRemoteVendas();
+                if (typeof this._listenRemoteVendedores === 'function') this._listenRemoteVendedores();
             }).catch(err => {
                 console.error('Falha ao autenticar (anon):', err);
+                this.sync.enabled = false;
+                try { this._atualizarStatusSync && this._atualizarStatusSync(); } catch (_) {}
             });
         } catch (e) {
             console.error('Erro ao inicializar sync:', e);
+            this.sync.enabled = false;
+            try { this._atualizarStatusSync && this._atualizarStatusSync(); } catch (_) {}
         }
     }
 
@@ -329,6 +339,77 @@ class SistemaTabacaria {
             };
             this.sync.db.collection(collection).add({ ...payload, _meta: meta }).catch(err => console.error('Falha add', collection, err));
         } catch (e) { console.error('Erro _syncAdd:', e); }
+    }
+
+    // Sincronização de Vendedores
+    _listenRemoteVendedores() {
+        if (!this.sync || !this.sync.enabled || !this.sync.db) return;
+        try {
+            this.sync.db.collection('vendedores').onSnapshot((snap) => {
+                const arr = [];
+                snap.forEach(doc => arr.push(doc.data()));
+                this.vendedores = Array.isArray(arr) ? arr : [];
+                this._scheduleSave('vendedores', () => {
+                    try { localStorage.setItem('vendedores', JSON.stringify(this.vendedores)); }
+                    catch (e) { console.error('Erro ao salvar vendedores local:', e); }
+                }, 120);
+                try { this.atualizarListaVendedores && this.atualizarListaVendedores(); } catch (_) {}
+                try { this.carregarVendedoresSelect && this.carregarVendedoresSelect(); } catch (_) {}
+                try { this.carregarVendedoresSelectRelatorio && this.carregarVendedoresSelectRelatorio(); } catch (_) {}
+            }, (err) => console.error('Falha listener vendedores:', err));
+        } catch (e) { console.error('Erro ao ouvir vendedores:', e); }
+    }
+
+    _syncUpsertVendedores(lista) {
+        if (!this.sync || !this.sync.enabled || !this.sync.db) return;
+        try {
+            const batch = this.sync.db.batch();
+            (lista || []).forEach(v => {
+                const id = String(v && v.id || Math.random().toString(36).slice(2));
+                const ref = this.sync.db.collection('vendedores').doc(id);
+                const payload = {
+                    ...(v || {}),
+                    id,
+                    updatedAt: (firebase.firestore && firebase.firestore.FieldValue && firebase.firestore.FieldValue.serverTimestamp && firebase.firestore.FieldValue.serverTimestamp()) || new Date(),
+                    updatedBy: (this.sync && this.sync.user && this.sync.user.uid) || 'anon'
+                };
+                batch.set(ref, payload, { merge: true });
+            });
+            batch.commit().catch(err => console.error('Falha batch vendedores:', err));
+        } catch (e) { console.error('Erro upsert vendedores:', e); }
+    }
+
+    // Flush imediato ao ocultar/fechar aba
+    flushPendingSaves() {
+        try { localStorage.setItem('produtos', JSON.stringify(this.produtos || [])); } catch (e) { console.error('Flush produtos:', e); }
+        try { localStorage.setItem('vendedores', JSON.stringify(this.vendedores || [])); } catch (e) { console.error('Flush vendedores:', e); }
+        try {
+            const vendas = JSON.parse(localStorage.getItem('historico_vendas') || '[]');
+            localStorage.setItem('historico_vendas', JSON.stringify(vendas));
+        } catch (e) { console.error('Flush historico_vendas:', e); }
+        try {
+            const movimentos = JSON.parse(localStorage.getItem('historico_movimentos') || '[]');
+            localStorage.setItem('historico_movimentos', JSON.stringify(movimentos));
+        } catch (e) { console.error('Flush historico_movimentos:', e); }
+        try {
+            const hoje = new Date().toDateString();
+            localStorage.setItem(`vendas_${hoje}`, String(this.totalVendasDia || 0));
+        } catch (e) { console.error('Flush vendas_diarias:', e); }
+        try { this._syncUpsertProdutos && this._syncUpsertProdutos(this.produtos || []); } catch (_) {}
+        try { this._syncUpsertVendedores && this._syncUpsertVendedores(this.vendedores || []); } catch (_) {}
+    }
+
+    // Atualiza indicador visual de status
+    _atualizarStatusSync() {
+        try {
+            const item = document.querySelector('.status-item span');
+            const dot = document.querySelector('.status-icon');
+            if (item) item.textContent = (this.sync && this.sync.enabled) ? 'Sync Online' : 'Modo Local';
+            if (dot) {
+                dot.classList.remove('online', 'offline');
+                dot.classList.add((this.sync && this.sync.enabled) ? 'online' : 'offline');
+            }
+        } catch (_) {}
     }
 
     _carregarPixConfig() {
@@ -537,11 +618,14 @@ class SistemaTabacaria {
     }
 
     salvarVendedores() {
-        try {
-            localStorage.setItem('vendedores', JSON.stringify(this.vendedores));
-        } catch (e) {
-            console.error('Erro ao salvar vendedores:', e);
-        }
+        this._scheduleSave('vendedores', () => {
+            try {
+                localStorage.setItem('vendedores', JSON.stringify(this.vendedores));
+            } catch (e) {
+                console.error('Erro ao salvar vendedores:', e);
+            }
+        }, 120);
+        try { this._syncUpsertVendedores && this._syncUpsertVendedores(this.vendedores); } catch (_) {}
     }
 
     carregarVendedoresSelect() {
@@ -2608,6 +2692,97 @@ class SistemaTabacaria {
         return formasPagamento;
     }
 
+    // Backup/Restore em JSON
+    exportarBackupJSON() {
+        try {
+            const data = {
+                meta: { app: 'HidenSystems', version: 1, exportedAt: new Date().toISOString() },
+                produtos: this.produtos || [],
+                vendedores: this.vendedores || [],
+                historico_vendas: JSON.parse(localStorage.getItem('historico_vendas') || '[]'),
+                historico_movimentos: JSON.parse(localStorage.getItem('historico_movimentos') || '[]'),
+                vendas_diarias: {}
+            };
+            for (let i = 0; i < localStorage.length; i++) {
+                const k = localStorage.key(i);
+                if (k && k.startsWith('vendas_')) {
+                    data.vendas_diarias[k] = localStorage.getItem(k);
+                }
+            }
+            const pix = localStorage.getItem('pix_config');
+            if (pix) data.pix_config = JSON.parse(pix);
+            const fb = localStorage.getItem('firebase_config');
+            if (fb) data.firebase_config = JSON.parse(fb);
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `backup_hidensystems_${new Date().toISOString().slice(0,10)}.json`;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            URL.revokeObjectURL(url);
+            try { this.mostrarToast('Backup', 'Backup exportado com sucesso.', 'success'); } catch (_) {}
+        } catch (e) {
+            console.error('Erro ao exportar backup:', e);
+            try { this.mostrarToast('Erro', 'Erro ao exportar backup.', 'error'); } catch (_) {}
+        }
+    }
+
+    importarBackupJSON(file) {
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = () => {
+            try {
+                const data = JSON.parse(reader.result);
+                if (data.produtos) {
+                    this.produtos = Array.isArray(data.produtos) ? data.produtos : [];
+                    this.salvarProdutos();
+                    this.atualizarEstoque();
+                    this.carregarProdutosSelect();
+                }
+                if (data.vendedores) {
+                    this.vendedores = Array.isArray(data.vendedores) ? data.vendedores : [];
+                    this.salvarVendedores();
+                    this.carregarVendedoresSelect();
+                    this.carregarVendedoresSelectRelatorio();
+                    this.atualizarListaVendedores();
+                }
+                if (data.historico_vendas) {
+                    localStorage.setItem('historico_vendas', JSON.stringify(data.historico_vendas));
+                }
+                if (data.historico_movimentos) {
+                    localStorage.setItem('historico_movimentos', JSON.stringify(data.historico_movimentos));
+                }
+                if (data.vendas_diarias) {
+                    Object.entries(data.vendas_diarias).forEach(([k,v]) => { try { localStorage.setItem(k, String(v)); } catch(_) {} });
+                    this.totalVendasDia = this.carregarTotalVendas();
+                    this.atualizarTotalVendas();
+                }
+                if (data.pix_config) {
+                    try { localStorage.setItem('pix_config', JSON.stringify(data.pix_config)); } catch (_) {}
+                    try { this._carregarPixConfig && this._carregarPixConfig(); this.renderizarPix && this.renderizarPix(); } catch (_) {}
+                }
+                if (data.firebase_config) {
+                    try { localStorage.setItem('firebase_config', JSON.stringify(data.firebase_config)); } catch (_) {}
+                }
+                // Sync remoto se habilitado
+                try {
+                    if (this.sync && this.sync.enabled) {
+                        this._syncUpsertProdutos && this._syncUpsertProdutos(this.produtos || []);
+                        this._syncUpsertVendedores && this._syncUpsertVendedores(this.vendedores || []);
+                    }
+                } catch (_) {}
+                try { this.atualizarRelatorios && this.atualizarRelatorios(); } catch (_) {}
+                try { this.mostrarToast('Backup', 'Backup importado com sucesso.', 'success'); } catch (_) {}
+            } catch (e) {
+                console.error('Erro ao importar backup:', e);
+                try { this.mostrarToast('Erro', 'Erro ao importar backup.', 'error'); } catch (_) {}
+            }
+        };
+        reader.readAsText(file);
+    }
+
     ajustarEstoque(id, quantidade) {
         const produto = this.getProdutoById(id);
         const novoEstoque = produto.estoque + quantidade;
@@ -4093,6 +4268,421 @@ function showTab(tabName) {
 
 // Inicializar sistema
 const sistema = new SistemaTabacaria();
+
+// Métodos de autenticação (UI + lógica local)
+sistema._loadAuthControl = function() {
+  try { this._authc = JSON.parse(localStorage.getItem('tabacaria_authc') || '{}'); } catch (_) { this._authc = {}; }
+  if (!this._authc.global) this._authc.global = { consecutiveFailures: 0, lockUntil: 0 };
+  if (!this._authc.users) this._authc.users = {};
+};
+
+sistema._saveAuthControl = function() {
+  localStorage.setItem('tabacaria_authc', JSON.stringify(this._authc || {}));
+};
+
+sistema._canAttempt = function(email) {
+  const now = Date.now();
+  this._loadAuthControl();
+  if (this._authc.global.lockUntil && this._authc.global.lockUntil > now) return false;
+  const u = this._authc.users[email] || { consecutiveFailures: 0, lockUntil: 0 };
+  if (u.lockUntil && u.lockUntil > now) return false;
+  return true;
+};
+
+sistema._recordFailure = function(email) {
+  const now = Date.now();
+  this._loadAuthControl();
+  const u = this._authc.users[email] || { consecutiveFailures: 0, lockUntil: 0 };
+  u.consecutiveFailures += 1;
+  // backoff: trava 15min em 5 falhas, dobra a cada 5 extras (máx. 2h)
+  if (u.consecutiveFailures >= 5) {
+    const multiplier = Math.floor((u.consecutiveFailures - 5) / 5);
+    const base = 15 * 60 * 1000;
+    const lock = Math.min(base * Math.pow(2, multiplier), 2 * 60 * 60 * 1000);
+    u.lockUntil = now + lock;
+  }
+  this._authc.users[email] = u;
+  // também controla falhas globais para reduzir robôs
+  this._authc.global.consecutiveFailures = (this._authc.global.consecutiveFailures || 0) + 1;
+  if (this._authc.global.consecutiveFailures >= 20) {
+    this._authc.global.lockUntil = now + 10 * 60 * 1000; // 10min
+  }
+  this._saveAuthControl();
+};
+
+sistema._recordSuccess = function(email) {
+  this._loadAuthControl();
+  const u = this._authc.users[email] || { consecutiveFailures: 0, lockUntil: 0 };
+  u.consecutiveFailures = 0; u.lockUntil = 0;
+  this._authc.users[email] = u;
+  this._authc.global.consecutiveFailures = 0; this._authc.global.lockUntil = 0;
+  this._saveAuthControl();
+};
+
+sistema._loadAccounts = function() {
+  try { return JSON.parse(localStorage.getItem('tabacaria_accounts') || '{}'); } catch (_) { return {}; }
+};
+
+sistema._saveAccounts = function(obj) {
+  localStorage.setItem('tabacaria_accounts', JSON.stringify(obj));
+};
+
+sistema._getAccount = function(email) {
+  const all = this._loadAccounts(); return all[email] || null;
+};
+
+sistema._setAccount = function(email, data) {
+  const all = this._loadAccounts(); all[email] = data; this._saveAccounts(all);
+};
+
+sistema._deleteAccount = function(email) {
+  const all = this._loadAccounts(); delete all[email]; this._saveAccounts(all);
+};
+
+sistema._randomHex = function(len) {
+  const bytes = new Uint8Array(len);
+  crypto.getRandomValues(bytes);
+  return Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join('');
+};
+
+sistema._hashPassword = async function(password, saltHex) {
+  const enc = new TextEncoder();
+  const data = enc.encode(saltHex + '|' + password);
+  const digest = await crypto.subtle.digest('SHA-256', data);
+  const bytes = new Uint8Array(digest);
+  return Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join('');
+};
+
+sistema._validateEmail = function(email) {
+  return /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email);
+};
+
+sistema._validatePassword = function(pwd) {
+  const issues = [];
+  if (pwd.length < 8) issues.push('mín. 8 caracteres');
+  if (!/[A-Z]/.test(pwd)) issues.push('uma maiúscula');
+  if (!/[a-z]/.test(pwd)) issues.push('uma minúscula');
+  if (!/[0-9]/.test(pwd)) issues.push('um número');
+  return issues;
+};
+
+sistema._formatEmailCompact = function(email) {
+  try {
+    const [local, domainFull] = String(email).split('@');
+    if (!domainFull) return local || '';
+    const domainBase = domainFull.split('.')[0] || domainFull;
+    // Exibe apenas o essencial: local + base do domínio
+    return `${local} • ${domainBase}`;
+  } catch (_) {
+    return String(email || '');
+  }
+};
+
+sistema.updateAuthUI = function() {
+  const loginBtn = document.getElementById('btn-login');
+  const userInfo = document.getElementById('user-info');
+  const emailLabel = document.getElementById('user-email');
+  if (!loginBtn || !userInfo || !emailLabel) return;
+  if (this.user && this.user.email) {
+    loginBtn.style.display = 'none';
+    userInfo.style.display = 'flex';
+    emailLabel.textContent = this._formatEmailCompact(this.user.email);
+    emailLabel.setAttribute('data-full-email', this.user.email);
+  } else {
+    loginBtn.style.display = 'inline-flex';
+    userInfo.style.display = 'none';
+    emailLabel.textContent = '';
+    emailLabel.removeAttribute('data-full-email');
+  }
+};
+
+sistema.isLoggedIn = function() { return !!(this.user && this.user.email); };
+
+sistema.logout = function() {
+  this.user = null;
+  localStorage.removeItem('tabacaria_auth_user');
+  try { this.mostrarToast('Você saiu da conta.', 'success', 3000); } catch (_) {}
+  this.updateAuthUI();
+};
+
+sistema.abrirModalLogin = function() {
+  const modal = document.getElementById('modal');
+  const modalBody = document.getElementById('modal-body');
+  if (!modal || !modalBody) return;
+  const html = `
+    <div class="auth-container">
+      <h3 class="notification-title">Acesso à Conta</h3>
+      <div class="auth-tabs" style="display:flex; gap:8px; margin:8px 0 16px;">
+        <button id="tab-login" class="btn-notification primary">Entrar</button>
+        <button id="tab-register" class="btn-notification">Cadastrar</button>
+        <button id="tab-reset" class="btn-notification">Recuperar</button>
+      </div>
+      <div id="view-login">
+        <div class="input-group">
+          <label for="auth-email">Email</label>
+          <input type="email" id="auth-email" placeholder="seu@email.com">
+        </div>
+        <div class="input-group">
+          <label for="auth-password">Senha</label>
+          <input type="password" id="auth-password" placeholder="••••••••">
+        </div>
+        <div class="notification-actions">
+          <button id="do-login" class="btn-notification primary">Entrar</button>
+        </div>
+        <p id="auth-error" class="error-message" style="display:none;color:#c0392b;margin-top:8px;"></p>
+      </div>
+      <div id="view-register" style="display:none;">
+        <div class="input-group">
+          <label for="reg-email">Email</label>
+          <input type="email" id="reg-email" placeholder="seu@email.com">
+        </div>
+        <div class="input-group">
+          <label for="reg-password">Senha</label>
+          <input type="password" id="reg-password" placeholder="mín. 8, maiúscula, número">
+        </div>
+        <div class="input-group">
+          <label for="reg-pin">PIN de recuperação (6 dígitos)</label>
+          <input type="text" id="reg-pin" maxlength="6" placeholder="ex: 123456">
+        </div>
+        <div class="notification-actions">
+          <button id="do-register" class="btn-notification primary">Cadastrar</button>
+        </div>
+        <p id="reg-error" class="error-message" style="display:none;color:#c0392b;margin-top:8px;"></p>
+      </div>
+      <div id="view-reset" style="display:none;">
+        <div class="input-group">
+          <label for="reset-email">Email</label>
+          <input type="email" id="reset-email" placeholder="seu@email.com">
+        </div>
+        <div class="input-group">
+          <label for="reset-pin">PIN de recuperação</label>
+          <input type="text" id="reset-pin" maxlength="6" placeholder="PIN configurado no cadastro">
+        </div>
+        <div class="input-group">
+          <label for="reset-newpass">Nova senha</label>
+          <input type="password" id="reset-newpass" placeholder="mín. 8, maiúscula, número">
+        </div>
+        <div class="notification-actions">
+          <button id="do-reset" class="btn-notification primary">Atualizar senha</button>
+        </div>
+        <p id="reset-error" class="error-message" style="display:none;color:#c0392b;margin-top:8px;"></p>
+      </div>
+    </div>
+  `;
+  modalBody.innerHTML = html;
+  modal.style.display = 'block';
+  this._bindLoginEvents();
+};
+
+sistema._bindLoginEvents = function() {
+  const showView = (name) => {
+    ['login','register','reset'].forEach(v => {
+      const el = document.getElementById(`view-${v}`);
+      if (el) el.style.display = (v === name) ? 'block' : 'none';
+    });
+  };
+  const tabLogin = document.getElementById('tab-login');
+  const tabRegister = document.getElementById('tab-register');
+  const tabReset = document.getElementById('tab-reset');
+  if (tabLogin) tabLogin.onclick = () => showView('login');
+  if (tabRegister) tabRegister.onclick = () => showView('register');
+  if (tabReset) tabReset.onclick = () => showView('reset');
+
+  const doLogin = document.getElementById('do-login');
+  const doRegister = document.getElementById('do-register');
+  const doReset = document.getElementById('do-reset');
+  if (doLogin) doLogin.onclick = () => this._submitLogin();
+  if (doRegister) doRegister.onclick = () => this._submitRegister();
+  if (doReset) doReset.onclick = () => this._submitReset();
+};
+
+sistema._submitLogin = async function() {
+  const email = (document.getElementById('auth-email')?.value || '').trim().toLowerCase();
+  const password = document.getElementById('auth-password')?.value || '';
+  const errorEl = document.getElementById('auth-error');
+  if (!this._validateEmail(email)) {
+    if (errorEl) { errorEl.textContent = 'Email inválido.'; errorEl.style.display = 'block'; }
+    return;
+  }
+  if (!this._canAttempt(email)) {
+    if (errorEl) { errorEl.textContent = 'Muitas tentativas. Tente novamente mais tarde.'; errorEl.style.display = 'block'; }
+    return;
+  }
+  const acc = this._getAccount(email);
+  if (!acc) {
+    this._recordFailure(email);
+    if (errorEl) { errorEl.textContent = 'Credenciais inválidas.'; errorEl.style.display = 'block'; }
+    return;
+  }
+  const hash = await this._hashPassword(password, acc.salt);
+  if (hash !== acc.hash) {
+    this._recordFailure(email);
+    if (errorEl) { errorEl.textContent = 'Credenciais inválidas.'; errorEl.style.display = 'block'; }
+    return;
+  }
+  this._recordSuccess(email);
+  this.user = { email };
+  localStorage.setItem('tabacaria_auth_user', JSON.stringify(this.user));
+  this.updateAuthUI();
+  try { this.mostrarToast('Login realizado com sucesso!', 'success', 3000); } catch (_) {}
+  const modal = document.getElementById('modal'); if (modal) modal.style.display = 'none';
+};
+
+sistema._submitRegister = async function() {
+  const email = (document.getElementById('reg-email')?.value || '').trim().toLowerCase();
+  const password = document.getElementById('reg-password')?.value || '';
+  const pin = (document.getElementById('reg-pin')?.value || '').trim();
+  const errorEl = document.getElementById('reg-error');
+  if (!this._validateEmail(email)) {
+    if (errorEl) { errorEl.textContent = 'Email inválido.'; errorEl.style.display = 'block'; }
+    return;
+  }
+  const pwdIssues = this._validatePassword(password);
+  if (pwdIssues.length) {
+    if (errorEl) { errorEl.textContent = 'Senha fraca: ' + pwdIssues.join(', '); errorEl.style.display = 'block'; }
+    return;
+  }
+  if (!/^[0-9]{6}$/.test(pin)) {
+    if (errorEl) { errorEl.textContent = 'PIN deve ter 6 dígitos numéricos.'; errorEl.style.display = 'block'; }
+    return;
+  }
+  if (this._getAccount(email)) {
+    if (errorEl) { errorEl.textContent = 'Email já cadastrado.'; errorEl.style.display = 'block'; }
+    return;
+  }
+  const salt = this._randomHex(16);
+  const hash = await this._hashPassword(password, salt);
+  this._setAccount(email, { salt, hash, pin, createdAt: Date.now() });
+  try { this.mostrarToast('Cadastro criado. Você já pode entrar.', 'success', 3000); } catch (_) {}
+  const tabLogin = document.getElementById('tab-login'); if (tabLogin) tabLogin.click();
+};
+
+sistema._submitReset = async function() {
+  const email = (document.getElementById('reset-email')?.value || '').trim().toLowerCase();
+  const pin = (document.getElementById('reset-pin')?.value || '').trim();
+  const newpass = document.getElementById('reset-newpass')?.value || '';
+  const errorEl = document.getElementById('reset-error');
+  if (!this._validateEmail(email)) {
+    if (errorEl) { errorEl.textContent = 'Email inválido.'; errorEl.style.display = 'block'; }
+    return;
+  }
+  const acc = this._getAccount(email);
+  if (!acc || acc.pin !== pin) {
+    if (errorEl) { errorEl.textContent = 'Email ou PIN incorretos.'; errorEl.style.display = 'block'; }
+    return;
+  }
+  const pwdIssues = this._validatePassword(newpass);
+  if (pwdIssues.length) {
+    if (errorEl) { errorEl.textContent = 'Senha fraca: ' + pwdIssues.join(', '); errorEl.style.display = 'block'; }
+    return;
+  }
+  const salt = this._randomHex(16);
+  const hash = await this._hashPassword(newpass, salt);
+  this._setAccount(email, { salt, hash, pin: acc.pin, createdAt: acc.createdAt, updatedAt: Date.now() });
+  try { this.mostrarToast('Senha atualizada com sucesso.', 'success', 3000); } catch (_) {}
+  const tabLogin = document.getElementById('tab-login'); if (tabLogin) tabLogin.click();
+};
+
+sistema._initAuthStateObserver = function() {
+  try { this._loadAuthControl(); } catch (_) {}
+  try {
+    const savedSession = sessionStorage.getItem('tabacaria_auth_user');
+    const savedLocal = localStorage.getItem('tabacaria_auth_user');
+    const raw = savedSession || savedLocal;
+    this.user = raw ? JSON.parse(raw) : null;
+  } catch (_) { this.user = null; }
+  try { this.updateAuthUI(); } catch (_) {}
+  try {
+    if (this.user && this.user.email) { this.hideLoginGate(); } else { this.showLoginGate(); }
+  } catch (_) {}
+};
+
+sistema.showLoginGate = function() {
+  const gate = document.getElementById('login-gate');
+  if (gate) { gate.style.display = 'flex'; }
+  try { document.body.classList.add('gate-open'); } catch (_) {}
+};
+
+sistema.hideLoginGate = function() {
+  const gate = document.getElementById('login-gate');
+  if (gate) { gate.style.display = 'none'; }
+  try { document.body.classList.remove('gate-open'); } catch (_) {}
+};
+
+sistema.processLoginGate = async function() {
+  const identity = (document.getElementById('login-identity')?.value || '').trim().toLowerCase();
+  const password = document.getElementById('login-password')?.value || '';
+  const remember = !!document.getElementById('login-remember')?.checked;
+  const errorEl = document.getElementById('login-error');
+  if (errorEl) errorEl.style.display = 'none';
+
+  if (!this._validateEmail(identity)) {
+    if (errorEl) { errorEl.textContent = 'Email inválido.'; errorEl.style.display = 'block'; }
+    return;
+  }
+  if (!this._canAttempt(identity)) {
+    if (errorEl) { errorEl.textContent = 'Muitas tentativas. Tente novamente mais tarde.'; errorEl.style.display = 'block'; }
+    return;
+  }
+  const acc = this._getAccount(identity);
+  if (!acc) {
+    this._recordFailure(identity);
+    if (errorEl) { errorEl.textContent = 'Credenciais inválidas.'; errorEl.style.display = 'block'; }
+    return;
+  }
+  const hash = await this._hashPassword(password, acc.salt);
+  if (hash !== acc.hash) {
+    this._recordFailure(identity);
+    if (errorEl) { errorEl.textContent = 'Credenciais inválidas.'; errorEl.style.display = 'block'; }
+    return;
+  }
+  this._recordSuccess(identity);
+  this.user = { email: identity };
+  try {
+    const payload = JSON.stringify(this.user);
+    if (remember) {
+      localStorage.setItem('tabacaria_auth_user', payload);
+      sessionStorage.removeItem('tabacaria_auth_user');
+    } else {
+      sessionStorage.setItem('tabacaria_auth_user', payload);
+      localStorage.removeItem('tabacaria_auth_user');
+    }
+  } catch (_) {}
+  try { this.updateAuthUI(); } catch (_) {}
+  this.hideLoginGate();
+  try { this.mostrarToast('Login realizado com sucesso!', 'success', 2500); } catch (_) {}
+};
+
+// Criar usuário padrão para acesso inicial (apenas se não existir)
+sistema.seedDefaultAccount = async function() {
+  const email = 'admin@hidensystems.com.br';
+  const password = 'Hiden@2025!';
+  const pin = '735219';
+  try {
+    if (typeof this._getAccount !== 'function' || typeof this._setAccount !== 'function') return;
+    if (this._getAccount(email)) return; // já existe
+    const salt = this._randomHex(16);
+    const hash = await this._hashPassword(password, salt);
+    this._setAccount(email, { salt, hash, pin, createdAt: Date.now(), seeded: true });
+    console.log('✅ Conta padrão criada:', email);
+  } catch (e) { console.warn('Falha ao criar conta padrão:', e); }
+};
+
+// Executa o seed de conta padrão antes de observar estado
+(async () => { try { await sistema.seedDefaultAccount(); } catch (e) { console.warn('Seed account failed', e); } })();
+
+try { sistema._initAuthStateObserver(); } catch (e) { console.warn('Auth observer init failed', e); }
+
+// Garantir flush dos dados ao fechar/ocultar a aba
+try {
+    window.addEventListener('pagehide', () => { try { sistema.flushPendingSaves(); } catch (_) {} });
+    document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'hidden') {
+            try { sistema.flushPendingSaves(); } catch (_) {}
+        }
+    });
+    window.addEventListener('beforeunload', () => { try { sistema.flushPendingSaves(); } catch (_) {} });
+} catch (_) {}
 
 // Configurar chave PIX fornecida pelo usuário
 sistema.definirPixChave('165.940.097-02');
