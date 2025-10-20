@@ -1886,7 +1886,7 @@ button:active {
     .tab-content { content-visibility: auto; contain-intrinsic-size: 480px; }
 }
 
-@media (max-width: 480px) {
+@media all and (max-width: 480px) {
     header h1 {
         font-size: 1.5rem;
     }
@@ -2366,9 +2366,9 @@ button:active {
     color: var(--gray-900);
     margin-bottom: var(--spacing-xs);
     letter-spacing: -0.025em;
-    overflow-wrap: anywhere;
-    word-break: break-word;
-    hyphens: auto;
+    overflow-wrap: break-word;
+    word-break: normal;
+    hyphens: none;
 }
  
  .produto-categoria {
@@ -2831,7 +2831,7 @@ button:active {
     margin: 4vh auto; /* reduz margem superior para caber melhor na tela */
     padding: 0;
     border-radius: var(--radius-lg);
-    width: min(640px, 92vw); /* mais largura útil sem estourar */
+    width: 92vw; max-width: 640px; /* substitui min() para compatibilidade */
     max-height: 88vh; /* garante visibilidade total sem cortes */
     overflow-y: auto; /* rolagem interna quando necessário */
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
@@ -3082,7 +3082,7 @@ button:active {
 
 /* Gate de Login: garantir cobertura total e prioridade acima dos toasts */
 body.gate-open .toast-container { display: none !important; }
-.login-gate { z-index: 20000 !important; min-height: 100vh; height: 100dvh; height: 100svh; overscroll-behavior: contain; }
+.login-gate { z-index: 20000 !important; min-height: 100vh; height: 100vh; overscroll-behavior: contain; }
 
 .toast {
     background: rgba(255, 255, 255, 0.98);
@@ -3344,7 +3344,7 @@ body.gate-open .toast-container { display: none !important; }
 }
 
 /* Compactação extra para smartphones pequenos */
-@media (max-width: 480px) {
+@media screen and (max-width: 480px) {
     .toast-container {
         top: calc(6px + env(safe-area-inset-top));
         left: 8px;
@@ -3615,57 +3615,31 @@ body.gate-open .toast-container { display: none !important; }
 /* Small phones: uma coluna para evitar overflow horizontal */
 @media (max-width: 640px) {
     .relatorios-stats { grid-template-columns: 1fr; }
-}
 
-    .filtros-actions {
-        flex-direction: column;
-    }
-    
-    .modal-content {
-        margin: 5% auto;
-        width: 95%;
-    }
-    
-    .toast {
-        min-width: 300px;
-    }
-    
+    .filtros-actions { flex-direction: column; }
+    .modal-content { margin: 5% auto; width: 95%; }
+    .toast { min-width: 300px; }
+
     /* Responsividade do Inventário */
-    .search-wrapper {
-        width: 100%;
-        margin-left: 0;
-        margin-bottom: 1rem;
-    }
+    .search-wrapper { width: 100%; margin-left: 0; margin-bottom: 1rem; }
+    .filter-tabs { flex-direction: column; gap: 0.5rem; }
+    .filter-tab { padding: 0.75rem; text-align: center; }
+
+    .produto-item { flex-direction: column; align-items: flex-start; padding: 1rem; }
+
+    /* Garantir largura total para o bloco de informações no mobile */
+    .produto-info { width: 100%; }
+
+    /* Evitar quebras estranhas e manter leitura natural dos títulos */
+    .produto-nome { white-space: normal; overflow-wrap: break-word; word-break: keep-all; hyphens: none; font-size: 1.1rem; }
     
-    .filter-tabs {
-        flex-direction: column;
-        gap: 0.5rem;
-    }
+    .produto-dados { width: 100%; margin-bottom: 1rem; }
     
-    .filter-tab {
-        padding: 0.75rem;
-        text-align: center;
-    }
-    
-    .produto-item {
-        flex-direction: column;
-        align-items: flex-start;
-        padding: 1rem;
-    }
-    
-    .produto-dados {
-        width: 100%;
-        margin-bottom: 1rem;
-    }
-    
-    .produto-acoes {
-        width: 100%;
-        justify-content: space-between;
-    }
+    .produto-acoes { width: 100%; justify-content: space-between; }
 }
 
-@media (max-width: 480px) {
-    .relatorios-stats { grid-template-columns: 1fr; }
+@media all and (max-width: 480px) {
+    .relatorios-stats { grid-template-columns: minmax(0, 1fr); }
     
     .produto-item .status-badge {
         position: static;
@@ -4276,7 +4250,7 @@ body.gate-open .toast-container { display: none !important; }
   z-index: 3000;
 }
 .cmdk-container {
-  width: min(720px, 92vw);
+  width: 92vw; max-width: 720px;
   margin: 10vh auto 0;
   background: #fff;
   border: 1px solid #d0d7de;
