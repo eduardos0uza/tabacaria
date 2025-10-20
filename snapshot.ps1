@@ -55,7 +55,7 @@ if (GitAvailable) {
     try { git tag $tagName } catch {}
     if ($Push) {
         try {
-
+            $remotes = git remote
             if ($remotes) {
                 git push --tags
                 git push

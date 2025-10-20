@@ -34,7 +34,7 @@ while ($listener.IsListening) {
             $context.Response.StatusCode = 200
         } else {
             $context.Response.StatusCode = 404
-
+            $msg = [System.Text.Encoding]::UTF8.GetBytes('Not Found')
             $context.Response.OutputStream.Write($msg, 0, $msg.Length)
         }
         $context.Response.OutputStream.Close()

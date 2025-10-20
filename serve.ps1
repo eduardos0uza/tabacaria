@@ -44,7 +44,7 @@ while ($true) {
         $resp.OutputStream.Write($bytes, 0, $bytes.Length)
     } else {
         $resp.StatusCode = 404
-
+        $msg = [System.Text.Encoding]::UTF8.GetBytes("Not Found: $relPath")
         $resp.ContentType = "text/plain"
         $resp.ContentLength64 = $msg.Length
         $resp.OutputStream.Write($msg, 0, $msg.Length)

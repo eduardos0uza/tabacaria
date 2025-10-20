@@ -39,7 +39,7 @@ function OnChange {
 Register-ObjectEvent -InputObject $watcher -EventName Changed -SourceIdentifier 'FSChanged' -Action { OnChange $sender $eventArgs }
 Register-ObjectEvent -InputObject $watcher -EventName Created -SourceIdentifier 'FSCreated' -Action { OnChange $sender $eventArgs }
 Register-ObjectEvent -InputObject $watcher -EventName Renamed -SourceIdentifier 'FSRenamed' -Action { OnChange $sender $eventArgs }
-
+Register-ObjectEvent -InputObject $watcher -EventName Deleted -SourceIdentifier 'FSDeleted' -Action { OnChange $sender $eventArgs }
 
 Write-Host "Observando alterações em '$root'. Pressione Ctrl+C para sair."
 

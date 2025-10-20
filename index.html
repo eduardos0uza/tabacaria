@@ -130,18 +130,28 @@
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
+            flex: 1 1 auto;
+            min-width: 0;
         }
         .logout-btn {
-            border: 1px solid rgba(255, 255, 255, 0.4);
-            background: rgba(255, 255, 255, 0.2);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid rgba(255, 255, 255, 0.45);
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.28), rgba(255, 255, 255, 0.16));
             color: #fff;
-            padding: 6px 12px;
+            padding: 0 14px;
+            min-height: 36px;
+            min-width: 72px;
             border-radius: 999px;
-            font-size: 0.85rem;
-            font-weight: 600;
-            backdrop-filter: blur(6px);
+            font-size: 0.9rem;
+            font-weight: 700;
+            line-height: 1;
+            backdrop-filter: blur(8px);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
             transition: all 0.2s ease;
             cursor: pointer;
+            flex-shrink: 0;
         }
         .logout-btn:hover {
             background: rgba(255, 255, 255, 0.35);
@@ -149,13 +159,19 @@
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
         }
         .logout-btn:active { transform: translateY(0); }
+        .logout-btn:focus-visible {
+            outline: 2px solid rgba(96, 165, 250, 0.9);
+            outline-offset: 2px;
+        }
         
         /* Ajustes mobile para badge */
         @media (max-width: 420px) {
           .user-email { max-width: 140px; }
         }
         @media (max-width: 640px) {
-          .user-badge { padding: 6px 8px; }
+          .user-badge { padding: 6px 10px; gap: 10px; justify-content: space-between; }
+          #user-info.user-badge { flex: 1 1 auto; min-width: 0; }
+          .logout-btn { min-height: 38px; min-width: 80px; font-size: 0.9rem; }
         }
     </style>
 </head>
@@ -163,7 +179,7 @@
     <div id="login-gate" class="login-gate" style="position:fixed; inset:0; display:none; align-items:center; justify-content:center; z-index:9999;">
         <div class="login-card" role="dialog" aria-labelledby="login-title" aria-modal="true">
             <div class="brand-header">
-                <img id="brand-logo-login" class="brand-logo-img" alt="Logo da Hiden Systems" />
+                <img id="brand-logo-login" class="brand-logo-img" alt="Logo da Hiden Systems" decoding="async" loading="eager" fetchpriority="high" />
                 <div class="brand-mark" id="brand-mark">★</div>
                 <div class="brand-text">
                     <span id="brand-name-login"></span>
@@ -207,7 +223,7 @@
                                 <circle cx="22" cy="22" r="1.5" fill="#f59e0b"/>
                             </svg>
                         </div>
-                        <img id="brand-logo" class="logo-image" alt="Logo da Hiden Systems" />
+                        <img id="brand-logo" class="logo-image" alt="Logo da Hiden Systems" decoding="async" loading="eager" fetchpriority="high" />
                         <div class="logo-text">
                             <h1>HidenSystems</h1>
                             <span class="logo-subtitle">Sistema de Gestão</span>
