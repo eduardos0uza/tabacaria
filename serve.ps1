@@ -1,53 +1,39 @@
-param(
-    [string]$Root = (Get-Location),
-    [int]$Port = 8000
-)
-
-Add-Type -AssemblyName System.Net
-Add-Type -AssemblyName System.IO
-
-$prefix = "http://localhost:$Port/"
+Add-Type -AssemblyName System.Net.HttpListener
 $listener = New-Object System.Net.HttpListener
-$listener.Prefixes.Add($prefix)
+$listener.Prefixes.Add("http://localhost:8000/")
 $listener.Start()
-Write-Host "Static server running at $prefix serving '$Root'"
-
-function Get-ContentType([string]$path) {
-    switch ([System.IO.Path]::GetExtension($path).ToLower()) {
-        ".html" { "text/html" }
-        ".htm"  { "text/html" }
-        ".css"  { "text/css" }
-        ".js"   { "application/javascript" }
-        ".json" { "application/json" }
-        ".png"  { "image/png" }
-        ".jpg"  { "image/jpeg" }
-        ".jpeg" { "image/jpeg" }
-        ".svg"  { "image/svg+xml" }
-        ".ico"  { "image/x-icon" }
-        default  { "application/octet-stream" }
-    }
-}
-
+Write-Host "Static server on http://localhost:8000/"
 while ($true) {
-    $ctx = $listener.GetContext()
-    $req = $ctx.Request
-    $resp = $ctx.Response
-
-    $relPath = $req.Url.AbsolutePath.TrimStart('/')
-    if ([string]::IsNullOrWhiteSpace($relPath) -or $relPath.EndsWith('/')) { $relPath = "index.html" }
-    $fullPath = Join-Path $Root $relPath
-
-    if (Test-Path $fullPath -PathType Leaf) {
-        $bytes = [System.IO.File]::ReadAllBytes($fullPath)
-        $resp.ContentType = Get-ContentType $fullPath
-        $resp.ContentLength64 = $bytes.Length
-        $resp.OutputStream.Write($bytes, 0, $bytes.Length)
+    $context = $listener.GetContext()
+    $req = $context.Request
+    $res = $context.Response
+    $relativePath = $req.Url.AbsolutePath.TrimStart("/")
+    if ([string]::IsNullOrEmpty($relativePath)) { $relativePath = "index.html" }
+    $fullPath = Join-Path (Get-Location) $relativePath
+    if ((Test-Path $fullPath) -and -not (Test-Path -Path $fullPath -PathType Container)) {
+        try {
+            $bytes = [System.IO.File]::ReadAllBytes($fullPath)
+            $ext = [System.IO.Path]::GetExtension($fullPath).ToLower()
+            switch ($ext) {
+                ".html" { $res.ContentType = "text/html" }
+                ".css" { $res.ContentType = "text/css" }
+                ".js" { $res.ContentType = "application/javascript" }
+                ".json" { $res.ContentType = "application/json" }
+                ".png" { $res.ContentType = "image/png" }
+                ".jpg" { $res.ContentType = "image/jpeg" }
+                ".jpeg" { $res.ContentType = "image/jpeg" }
+                default { $res.ContentType = "application/octet-stream" }
+            }
+            $res.OutputStream.Write($bytes, 0, $bytes.Length)
+        } catch {
+            $res.StatusCode = 500
+            $errBytes = [System.Text.Encoding]::UTF8.GetBytes("Server error: $($_.Exception.Message)")
+            $res.OutputStream.Write($errBytes, 0, $errBytes.Length)
+        }
     } else {
-        $resp.StatusCode = 404
-        $msg = [System.Text.Encoding]::UTF8.GetBytes("Not Found: $relPath")
-        $resp.ContentType = "text/plain"
-        $resp.ContentLength64 = $msg.Length
-        $resp.OutputStream.Write($msg, 0, $msg.Length)
+        $res.StatusCode = 404
+        $errBytes = [System.Text.Encoding]::UTF8.GetBytes("Not found")
+        $res.OutputStream.Write($errBytes, 0, $errBytes.Length)
     }
-    $resp.OutputStream.Close()
+    $res.OutputStream.Close()
 }

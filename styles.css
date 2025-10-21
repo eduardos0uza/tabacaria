@@ -1,8 +1,5 @@
 /* ===== SISTEMA TABACARIA ULTRA PROFISSIONAL ===== */
 
-/* Importar fontes premium */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@300;400;500;600;700;800&display=swap');
-
 /* ===== TÍTULOS DAS PÁGINAS MAIS ELEGANTES ===== */
 .dashboard-title h2,
 .estoque-title h2,
@@ -172,18 +169,22 @@ header::before {
     font-family: var(--font-secondary);
     font-size: 2rem;
     font-weight: 800;
-    color: white;
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    background: linear-gradient(135deg, #2dd4bf, #3b82f6 70%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    text-shadow: none;
     margin: 0;
-    line-height: 1;
+    line-height: 1.05;
+    letter-spacing: 0.3px;
 }
 
 .logo-subtitle {
-    font-size: 0.8rem;
-    color: rgba(255, 255, 255, 0.8);
-    font-weight: 500;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.92);
+    font-weight: 600;
+    text-transform: none;
+    letter-spacing: 0.2px;
 }
 
 /* Status Section */
@@ -597,9 +598,31 @@ header::before {
 
  /* Overrides de contraste do cabeçalho (Aba Caixa) */
  #caixa .dashboard-header { color: #ffffff; }
- #caixa .dashboard-title h2 { text-shadow: 0 1px 2px rgba(0,0,0,0.25); }
- #caixa .dashboard-title p { color: rgba(255,255,255,0.92); font-weight: 500; }
- #caixa .title-icon { background: rgba(255,255,255,0.18); border: 1px solid rgba(255,255,255,0.25); }
+ #caixa .dashboard-title h2 { 
+     text-shadow: 0 2px 4px rgba(0,0,0,0.4); 
+     font-size: 2.6rem;
+     font-weight: 800;
+     letter-spacing: 0.02em;
+ }
+ #caixa .dashboard-title p { 
+     color: rgba(255,255,255,0.98); 
+     font-weight: 700;
+     font-size: 1.2rem;
+     text-shadow: 0 1px 2px rgba(0,0,0,0.25);
+ }
+ #caixa .title-icon { 
+     background: rgba(255,255,255,0.22); 
+     border: 2px solid rgba(255,255,255,0.35);
+     width: 72px;
+     height: 72px;
+     border-radius: 18px;
+     box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+ }
+ #caixa .title-icon svg {
+     width: 40px;
+     height: 40px;
+     stroke-width: 2.5;
+ }
  
  .quick-stat {
     background: rgba(255, 255, 255, 0.8);
@@ -1181,14 +1204,20 @@ button:active {
 }
 
 .title-icon {
-    width: 40px;
-    height: 40px;
+    width: 56px;
+    height: 56px;
     background: var(--primary-blue);
     border-radius: var(--radius-md);
     display: flex;
     align-items: center;
     justify-content: center;
     color: white;
+    flex: 0 0 56px;
+}
+.title-icon svg {
+    width: 32px;
+    height: 32px;
+    stroke-width: 2.25;
 }
 
 .produtos-stats {
@@ -2282,6 +2311,10 @@ button:active {
     list-style: none;
     margin: 0;
     padding: 0.5rem 0;
+    /* Performance: apenas renderiza quando visível */
+    content-visibility: auto;
+    contain-intrinsic-size: 400px;
+    contain: layout style paint;
 }
 
 .mov-empty {
@@ -2339,6 +2372,10 @@ button:active {
      border-radius: var(--radius-xl);
      border: 1px solid var(--gray-200);
      box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.02);
+     /* Performance: evita renderização fora da viewport */
+     content-visibility: auto;
+     contain-intrinsic-size: 600px;
+     contain: layout style paint;
  }
  
  .produto-item {
@@ -3248,6 +3285,10 @@ body.gate-open .toast-container { display: none !important; }
     border-radius: 8px;
     padding: 15px;
     border: 1px solid var(--gray-200);
+    /* Performance: ajuda listas internas a não impactarem o layout fora de tela */
+    content-visibility: auto;
+    contain-intrinsic-size: 300px;
+    contain: layout style paint;
 }
 
 .venda-item-resumo {
@@ -3937,8 +3978,8 @@ body.gate-open .toast-container { display: none !important; }
         min-width: 0; /* permite encolher sem estourar */
     }
     #vendedores .title-icon {
-        width: 44px;
-        height: 44px;
+        width: 56px;
+        height: 56px;
         padding: 0;
         display: inline-flex;
         align-items: center;
@@ -3946,12 +3987,13 @@ body.gate-open .toast-container { display: none !important; }
         background: var(--primary-blue);
         color: #fff;
         border-radius: 12px;
-        flex: 0 0 44px;
+        flex: 0 0 56px;
         box-shadow: 0 2px 6px rgba(0,0,0,0.12);
     }
     #vendedores .title-icon svg {
-        width: 24px;
-        height: 24px;
+        width: 32px;
+        height: 32px;
+        stroke-width: 2.25;
     }
     #vendedores .estoque-title h2 {
         font-size: 1.5rem;
@@ -3965,21 +4007,22 @@ body.gate-open .toast-container { display: none !important; }
 
     /* Caixa: ícone maior e texto mais visível no mobile */
     #caixa .title-icon {
-        width: 48px;
-        height: 48px;
+        width: 64px;
+        height: 64px;
         padding: 0;
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        border-radius: 12px;
-        flex: 0 0 48px;
-        background: rgba(255,255,255,0.18);
-        border: 1px solid rgba(255,255,255,0.25);
+        border-radius: 16px;
+        flex: 0 0 64px;
+        background: rgba(255,255,255,0.22);
+        border: 2px solid rgba(255,255,255,0.35);
+        box-shadow: 0 4px 16px rgba(0,0,0,0.15);
     }
     #caixa .title-icon svg {
-        width: 26px;
-        height: 26px;
-        stroke-width: 2;
+        width: 36px;
+        height: 36px;
+        stroke-width: 2.5;
     }
     #caixa .dashboard-title h2 {
         background: none;
@@ -3987,48 +4030,51 @@ body.gate-open .toast-container { display: none !important; }
         background-clip: initial;
         -webkit-text-fill-color: initial;
         color: #ffffff;
-        text-shadow: 0 1px 2px rgba(0,0,0,0.35);
-        font-size: 1.8rem;
-        line-height: 1.2;
-        letter-spacing: 0.01em;
+        text-shadow: 0 2px 4px rgba(0,0,0,0.4);
+        font-size: 2.4rem;
+        line-height: 1.1;
+        letter-spacing: 0.02em;
+        font-weight: 800;
     }
     #caixa .dashboard-title p {
-        color: rgba(255,255,255,0.96);
-        font-weight: 600;
+        color: rgba(255,255,255,0.98);
+        font-weight: 700;
+        font-size: 1.1rem;
+        text-shadow: 0 1px 2px rgba(0,0,0,0.25);
     }
 
     /* Estoque: ícone maior no mobile */
     #estoque .title-icon {
-        width: 48px;
-        height: 48px;
+        width: 56px;
+        height: 56px;
         padding: 0;
         display: inline-flex;
         align-items: center;
         justify-content: center;
         border-radius: 12px;
-        flex: 0 0 48px;
+        flex: 0 0 56px;
     }
     #estoque .title-icon svg {
-         width: 26px;
-         height: 26px;
-         stroke-width: 2;
+         width: 32px;
+         height: 32px;
+         stroke-width: 2.25;
      }
  
      /* Produtos: ícone maior no mobile */
      #produtos .title-icon {
-         width: 48px;
-         height: 48px;
+         width: 56px;
+         height: 56px;
          padding: 0;
          display: inline-flex;
          align-items: center;
          justify-content: center;
          border-radius: 12px;
-         flex: 0 0 48px;
+         flex: 0 0 56px;
      }
      #produtos .title-icon svg {
-         width: 26px;
-         height: 26px;
-         stroke-width: 2;
+         width: 32px;
+         height: 32px;
+         stroke-width: 2.25;
      }
  }
 
@@ -4036,15 +4082,35 @@ body.gate-open .toast-container { display: none !important; }
     html { font-size: 17px; }
     input, select, textarea { font-size: 17px; }
 
-    /* Aumentar itens específicos da aba Vendedores */
-    #vendedores .estoque-title h2 { font-size: 1.7rem; }
-    #vendedores .card-header h3 { font-size: 1.3rem; }
-    #vendedores .filter-tabs-novo { padding: 0.35rem; }
-    #vendedores .filter-tab-novo { font-size: 1rem; padding: 0.85rem 1rem; }
-    #vendedores .vendor-avatar { width: 52px; height: 52px; }
-    #vendedores .vendor-title { font-size: 1rem; }
-    #vendedores .vendor-sub { font-size: 0.95rem; }
-    #vendedores .vendor-status-badge { font-size: 0.75rem; padding: 0.3rem 0.6rem; }
+    /* Vendedores: filtros e cabeçalho ajustados para smartphone */
+    @media (max-width: 640px) {
+      #vendedores .estoque-title h2 { font-size: 1.7rem; }
+      #vendedores .card-header h3 { font-size: 1.3rem; }
+
+      /* Container das abas: quebra em 2 colunas */
+      #vendedores #vendedores-filter-tabs.filter-tabs-novo {
+        padding: 0.35rem;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        justify-content: center;
+      }
+
+      /* Cada aba ocupa metade da linha no mobile */
+      #vendedores .filter-tab-novo {
+        flex: 1 1 calc(50% - 0.5rem);
+        min-width: 140px;
+        font-size: 0.95rem;
+        padding: 0.7rem 0.85rem;
+        letter-spacing: 0;
+        white-space: nowrap;
+      }
+
+      /* Ajustes de avatar e tipografia */
+      #vendedores .vendor-avatar { width: 52px; height: 52px; }
+      #vendedores .vendor-title { font-size: 1rem; }
+      #vendedores .vendor-sub { font-size: 0.95rem; }
+      #vendedores .vendor-status-badge { font-size: 0.75rem; padding: 0.3rem 0.6rem; }
+    }
 /* empty rule removed */
 
 @media (max-width: 420px) {

@@ -128,14 +128,33 @@ class SistemaTabacaria {
         }
 
         // Atualização automática da seção "Movimentações Recentes" quando houver novos registros
-        document.addEventListener('movimentos_atualizados', () => {
-            if (typeof this.renderizarMovimentacoesRecentes === 'function') {
-                this.renderizarMovimentacoesRecentes();
+        document.addEventListener('movimentos_atualizados', (ev) => {
+            if (typeof this.renderizarMovimentacoesRecentes === 'function') this.renderizarMovimentacoesRecentes();
+            if (typeof this.atualizarMovListComDetalhes === 'function') this.atualizarMovListComDetalhes();
+            try {
+                const card = document.querySelector('.mov-card');
+                if (card) card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                const ul = document.getElementById('mov-list');
+                if (ul) {
+                    const first = ul.querySelector('li.mov-item');
+                    if (first) first.classList.add('recent');
+                }
+            } catch (_) {}
+        });
+
+        // Atualiza automaticamente quando localStorage muda (outra aba ou sync remoto)
+        window.addEventListener('storage', (e) => {
+            if (e.key === 'historico_movimentos') {
+                if (typeof this.renderizarMovimentacoesRecentes === 'function') this.renderizarMovimentacoesRecentes();
+                if (typeof this.atualizarMovListComDetalhes === 'function') this.atualizarMovListComDetalhes();
             }
         });
 
         // Inicializar sincronização em tempo real (se configurada)
         this._initRealtimeSync();
+
+        // Monitoramento contínuo de Movimentações Recentes
+        setTimeout(() => { try { this.inicializarAutoAtualizacaoMovimentos(); } catch (e) { console.warn('Auto atualização indisponível', e); } }, 0);
 
         // Atalhos globais (navegação e ações rápidas)
         document.addEventListener('keydown', (e) => {
@@ -1529,7 +1548,15 @@ class SistemaTabacaria {
         } catch (_) {}
         // Dispara evento e atualiza seção de "Movimentações Recentes" automaticamente
         try { document.dispatchEvent(new CustomEvent('movimentos_atualizados', { detail: movimento })); } catch (_) {}
-        if (typeof this.renderizarMovimentacoesRecentes === 'function') {
+        // Broadcast para outras abas/janelas
+        try {
+            if (!this._movBC && 'BroadcastChannel' in window) this._movBC = new BroadcastChannel('tabacaria_movimentos');
+            this._movBC.postMessage({ type: 'movimentos_atualizados', movimento });
+        } catch (_) {}
+        // Atualiza lista detalhada (fallback para lista simples)
+        if (typeof this.atualizarMovListComDetalhes === 'function') {
+            this.atualizarMovListComDetalhes();
+        } else if (typeof this.renderizarMovimentacoesRecentes === 'function') {
             this.renderizarMovimentacoesRecentes();
         }
     }
@@ -1836,22 +1863,53 @@ class SistemaTabacaria {
 
     _popularEntradaRapidaSelect() {
         const select = document.getElementById('entrada-produto');
-        if (!select) return;
-        // Preencher com produtos
-        select.innerHTML = '<option value="">Selecione o produto...</option>';
-        (this.produtos || []).forEach(p => {
-            const opt = document.createElement('option');
-            opt.value = p.id;
-            opt.textContent = `${p.nome} — estoque: ${p.estoque ?? 0}`;
-            select.appendChild(opt);
-        });
+        if (select) {
+            // Preencher com produtos
+            select.innerHTML = '<option value="">Selecione o produto...</option>';
+            (this.produtos || []).forEach(p => {
+                const opt = document.createElement('option');
+                opt.value = p.id;
+                opt.textContent = `${p.nome} — estoque: ${p.estoque ?? 0}`;
+                select.appendChild(opt);
+            });
+        }
+        // Preencher vendedores
+        const vendSelect = document.getElementById('entrada-vendedor');
+        if (vendSelect) {
+            vendSelect.innerHTML = '<option value="">Selecione o vendedor...</option>';
+            (this.vendedores || []).forEach(v => {
+                const opt = document.createElement('option');
+                opt.value = String(v.id);
+                opt.textContent = v.nome + (v.contato ? ` — ${v.contato}` : '') + (v.status && v.status !== 'ativo' ? ` (${v.status})` : '');
+                vendSelect.appendChild(opt);
+            });
+            if (this.vendedorSelecionado) {
+                vendSelect.value = String(this.vendedorSelecionado.id);
+            }
+        }
     }
 
     inicializarEntradaRapidaInteracoes() {
         const select = document.getElementById('entrada-produto');
         const qtd = document.getElementById('entrada-quantidade');
+        const vend = document.getElementById('entrada-vendedor');
         if (select) select.addEventListener('change', () => this.atualizarValidacaoMovRapido());
         if (qtd) qtd.addEventListener('input', () => this.atualizarValidacaoMovRapido());
+        if (vend) vend.addEventListener('change', () => this.atualizarValidacaoMovRapido());
+        const obs = document.getElementById('entrada-observacao');
+        const obsErr = document.getElementById('entrada-observacao-error');
+        if (obs) {
+            obs.addEventListener('input', () => {
+                const has = obs.value.trim().length > 0;
+                if (obsErr) obsErr.style.display = has ? 'none' : 'block';
+                obs.classList.toggle('input-error', !has);
+                this.atualizarValidacaoMovRapido();
+            });
+        }
+        // Restaurar vendedor selecionado
+        if (vend && this.vendedorSelecionado) {
+            vend.value = String(this.vendedorSelecionado.id);
+        }
         this.atualizarValidacaoMovRapido();
     }
 
@@ -1876,24 +1934,45 @@ class SistemaTabacaria {
     atualizarValidacaoMovRapido() {
         const select = document.getElementById('entrada-produto');
         const qtd = document.getElementById('entrada-quantidade');
+        const vend = document.getElementById('entrada-vendedor');
         const badge = document.getElementById('stock-hint');
         const feedback = document.getElementById('qtd-feedback');
+        const vendFeedback = document.getElementById('vendedor-feedback');
         const btnConfirm = document.getElementById('mov-btn-confirm');
         const tipo = this._tipoMovRapido || 'entrada';
         const id = parseInt(select?.value || '0') || 0;
         const prod = this.getProdutoById(id);
         const estoque = prod ? (parseInt(prod.estoque) || 0) : 0;
         const quantidade = parseInt(qtd?.value || '0') || 0;
+        const vendId = vend?.value || '';
+        const obs = document.getElementById('entrada-observacao');
+        const obsErr = document.getElementById('entrada-observacao-error');
+        const obsVal = (obs?.value || '').trim();
 
         if (badge) { badge.textContent = prod ? `Estoque atual: ${estoque}` : ''; }
 
         let valido = true;
         if (!id || !Number.isFinite(quantidade) || quantidade < 1) valido = false;
+        if ((tipo === 'entrada' || tipo === 'saida') && !vendId) {
+            valido = false;
+            if (vendFeedback) vendFeedback.textContent = 'Selecione o vendedor.';
+        } else {
+            if (vendFeedback) vendFeedback.textContent = '';
+        }
         if (tipo === 'saida' && quantidade > estoque) {
             valido = false;
             if (feedback) feedback.textContent = `Quantidade excede o estoque disponível (${estoque}).`;
         } else {
             if (feedback) feedback.textContent = '';
+        }
+        // Observação obrigatória
+        if (!obsVal) {
+            valido = false;
+            if (obs) obs.classList.add('input-error');
+            if (obsErr) { obsErr.textContent = 'Observação é obrigatória'; obsErr.style.display = 'block'; }
+        } else {
+            if (obs) obs.classList.remove('input-error');
+            if (obsErr) obsErr.style.display = 'none';
         }
         if (btnConfirm) btnConfirm.disabled = !valido;
     }
@@ -1971,20 +2050,25 @@ class SistemaTabacaria {
         const select = document.getElementById('entrada-produto');
         const qtdInput = document.getElementById('entrada-quantidade');
         const obsInput = document.getElementById('entrada-observacao');
+        const vendSelect = document.getElementById('entrada-vendedor');
         if (!select || !qtdInput) return;
         const id = parseInt(select.value);
         const quantidade = parseInt(qtdInput.value);
         const observacao = obsInput ? obsInput.value.trim() : '';
+        const tipo = this._tipoMovRapido || 'entrada';
+        const vendId = vendSelect ? vendSelect.value : '';
 
         if (!id) { this.mostrarToast('Selecione um produto.', 'error'); return; }
         if (!Number.isFinite(quantidade) || quantidade <= 0) { this.mostrarToast('Informe uma quantidade válida.', 'error'); return; }
+        if ((tipo === 'entrada' || tipo === 'saida') && !vendId) { this.mostrarToast('Selecione o vendedor.', 'error'); return; }
+        if (!observacao) { this.mostrarToast('Observação é obrigatória.', 'error'); if (obsInput) obsInput.classList.add('input-error'); const err = document.getElementById('entrada-observacao-error'); if (err) { err.textContent = 'Observação é obrigatória'; err.style.display = 'block'; } return; }
 
         const produto = this.getProdutoById(id);
         if (!produto) { this.mostrarToast('Produto não encontrado.', 'error'); return; }
 
         const estoqueAntes = produto.estoque || 0;
         let estoqueDepois;
-        if ((this._tipoMovRapido || 'entrada') === 'saida') {
+        if (tipo === 'saida') {
             if (estoqueAntes < quantidade) {
                 this.mostrarToast('Estoque insuficiente para saída.', 'error');
                 return;
@@ -1998,17 +2082,27 @@ class SistemaTabacaria {
         this.atualizarEstoque();
         this.atualizarListaProdutos();
 
+        const vendedorObj = (this.vendedores || []).find(v => String(v.id) === String(vendId)) || null;
+
         // Registrar movimento
         const movimento = {
-            tipo: (this._tipoMovRapido || 'entrada'),
+            tipo: tipo,
+            origem: 'entrada-rapida',
             produtoId: produto.id,
+            nome: produto.nome,
             produtoNome: produto.nome,
+            codigo: produto.codigo || '',
             quantidade,
+            estoqueAntes: estoqueAntes,
+            estoqueDepois: estoqueDepois,
+            // campos legacy para compatibilidade
             antes: estoqueAntes,
             depois: estoqueDepois,
-            origem: 'entrada-rapida',
             observacao,
-            data: new Date().toISOString()
+            valorUnitario: Number.isFinite(produto.preco) ? produto.preco : undefined,
+            total: Number.isFinite(produto.preco) ? quantidade * produto.preco : undefined,
+            data: new Date().toISOString(),
+            vendedor: vendedorObj ? { id: vendedorObj.id, nome: vendedorObj.nome } : vendId ? { id: vendId, nome: '' } : null
         };
         if (typeof this.registrarMovimentoEstoque === 'function') {
             this.registrarMovimentoEstoque(movimento);
@@ -2017,7 +2111,7 @@ class SistemaTabacaria {
             this.renderizarMovimentacoesRecentes();
         }
 
-        this.mostrarToast(((this._tipoMovRapido || 'entrada') === 'entrada' ? 'Entrada' : 'Saída') + ' registrada com sucesso!', 'success');
+        this.mostrarToast((tipo === 'entrada' ? 'Entrada' : 'Saída') + ' registrada com sucesso!', 'success');
         this.limparEntradaRapida();
     }
 
@@ -3917,7 +4011,27 @@ function excluirProduto(id) {
 }
 
 function fecharModal() {
-    document.getElementById('modal').style.display = 'none';
+    const modal = document.getElementById('modal');
+    if (!modal) return;
+    // Se houver transição, faz fade-out e retorna foco à lista
+    if (modal.classList.contains('fade')) {
+        modal.classList.remove('show');
+        setTimeout(() => {
+            modal.style.display = 'none';
+            try {
+                const ul = document.getElementById('mov-list');
+                const idx = (typeof sistema !== 'undefined' && sistema._movDetalheIndex != null) ? sistema._movDetalheIndex : null;
+                let focusEl = null;
+                if (ul && idx != null) {
+                    focusEl = ul.querySelector(`li.mov-item[data-index="${idx}"]`);
+                }
+                if (!focusEl && ul) focusEl = ul.querySelector('li.mov-item');
+                if (focusEl) focusEl.focus();
+            } catch (_) {}
+        }, 200);
+    } else {
+        modal.style.display = 'none';
+    }
 }
 
 function removerToast(toastId) {
@@ -4290,8 +4404,11 @@ function showTab(tabName) {
                         if (typeof sistema.inicializarAnaliseEstoque === 'function') {
                             sistema.inicializarAnaliseEstoque();
                         }
-                        if (typeof sistema.renderizarMovimentacoesRecentes === 'function') {
-                            sistema.renderizarMovimentacoesRecentes();
+                        if (typeof sistema._ensureMovRecentesStyles === 'function') {
+                            sistema._ensureMovRecentesStyles();
+                        }
+                        if (typeof sistema.atualizarMovListComDetalhes === 'function') {
+                            sistema.atualizarMovListComDetalhes();
                         }
                         if (typeof sistema.atualizarRotatividadeEstoque === 'function') {
                             sistema.atualizarRotatividadeEstoque();
@@ -4872,9 +4989,44 @@ SistemaTabacaria.prototype.renderizarMovimentacoesRecentes = function() {
         ul.innerHTML = recentes.slice(0, 10).map(m => {
             const tipoIcon = m.tipo === 'entrada' ? '⬆️' : m.tipo === 'saida' ? '⬇️' : '⚙️';
             const dataLocal = new Date(m.data).toLocaleString();
-            return `<li><strong>${tipoIcon} ${m.tipo.toUpperCase()}</strong> • ${m.nome || m.codigo || 'Produto'} • ${m.quantidade} un • <span style="color:#6b7280">${dataLocal}</span></li>`;
+            return `<li><strong>${tipoIcon} ${m.tipo.toUpperCase()}</strong> • ${m.nome || m.produtoNome || m.codigo || 'Produto'} • ${m.quantidade} un • <span style="color:#6b7280">${dataLocal}</span></li>`;
         }).join('');
     });
+};
+
+// Atualização automática contínua das Movimentações Recentes (polling + BroadcastChannel)
+SistemaTabacaria.prototype.inicializarAutoAtualizacaoMovimentos = function() {
+    try {
+        // BroadcastChannel para sincronizar entre abas
+        if (!this._movBC && 'BroadcastChannel' in window) {
+            this._movBC = new BroadcastChannel('tabacaria_movimentos');
+            this._movBC.onmessage = (ev) => {
+                if (ev && ev.data && ev.data.type === 'movimentos_atualizados') {
+                    if (typeof this.atualizarMovListComDetalhes === 'function') this.atualizarMovListComDetalhes();
+                    else if (typeof this.renderizarMovimentacoesRecentes === 'function') this.renderizarMovimentacoesRecentes();
+                }
+            };
+        }
+        // Polling leve: detecta alterações sem re-renderizar desnecessariamente
+        const calcHash = () => {
+            const arr = this.obterMovimentosEstoque ? this.obterMovimentosEstoque() : [];
+            const last = arr[arr.length - 1] || {};
+            return `${arr.length}:${last.id || ''}:${last.data || ''}`;
+        };
+        this._movimentosHash = calcHash();
+        // Limpa timer anterior se existir
+        try { if (this._movAutoTimer) clearInterval(this._movAutoTimer); } catch (_) {}
+        this._movAutoTimer = setInterval(() => {
+            const h = calcHash();
+            if (h !== this._movimentosHash) {
+                this._movimentosHash = h;
+                if (typeof this.atualizarMovListComDetalhes === 'function') this.atualizarMovListComDetalhes();
+                else if (typeof this.renderizarMovimentacoesRecentes === 'function') this.renderizarMovimentacoesRecentes();
+            }
+        }, 2000); // atualiza a cada 2s
+    } catch (e) {
+        console.warn('Falha ao iniciar auto atualização de movimentos:', e);
+    }
 };
 
 // Painel de movimentos: entrada, saída, ajuste
@@ -4943,9 +5095,17 @@ SistemaTabacaria.prototype.abrirPainelMovimento = function(tipo) {
                         <option value="transferencia">Transferência</option>
                     </select>
                 </div>
+                <div class="field">
+                    <label>Vendedor</label>
+                    <select id="mov-vendedor">
+                        <option value="">Selecione…</option>
+                        ${ (this.vendedores || []).map(v => `<option value="${v.id}">${v.nome}${v.contato ? ' — ' + v.contato : ''}${(v.status && v.status !== 'ativo') ? ' ('+v.status+')' : ''}</option>`).join('') }
+                    </select>
+                </div>
                 <div class="field full">
-                    <label>Observação</label>
-                    <input type="text" id="mov-obs" placeholder="Fornecedor, nota, lote, motivo...">
+                    <label class="required-label">Observação</label>
+                    <input type="text" id="mov-obs" placeholder="Fornecedor, nota, lote, motivo..." required aria-required="true">
+                    <div id="mov-obs-error" class="field-error" style="display:none">Observação é obrigatória</div>
                 </div>
                 <div class="field">
                     <label>Data</label>
@@ -4978,10 +5138,16 @@ SistemaTabacaria.prototype.abrirPainelMovimento = function(tipo) {
     ['change','input'].forEach(ev => {
         const qtd = document.getElementById('mov-quantidade');
         const prod = document.getElementById('mov-produto');
+        const vend = document.getElementById('mov-vendedor');
         if (qtd) qtd.addEventListener(ev, atualizar);
         if (prod) prod.addEventListener(ev, atualizar);
+        if (vend) vend.addEventListener(ev, atualizar);
         document.querySelectorAll('input[name="mov-tipo"]').forEach(r => r.addEventListener(ev, atualizar));
     });
+    const vendEl = document.getElementById('mov-vendedor');
+    if (vendEl && this.vendedorSelecionado) {
+        vendEl.value = String(this.vendedorSelecionado.id);
+    }
     this._atualizarPreviewMovimento();
 };
 
@@ -4996,6 +5162,19 @@ SistemaTabacaria.prototype.confirmarMovimento = function(tipo) {
     const produto = this.getProdutoById(produtoId);
     if (!produto || !Number.isFinite(quantidade) || quantidade <= 0) {
         this.mostrarModal('Erro', 'Selecione um produto e quantidade válida.', 'error');
+        return;
+    }
+    const vendId = document.getElementById('mov-vendedor')?.value || '';
+    if ((tipoSelecionado === 'entrada' || tipoSelecionado === 'saida') && !vendId) {
+        this.mostrarModal('Erro', 'Selecione o vendedor.', 'error');
+        return;
+    }
+    if (!obs.trim()) {
+        const val = document.getElementById('mov-validation');
+        const obsInput = document.getElementById('mov-obs');
+        if (val) { val.textContent = 'Observação é obrigatória.'; val.className = 'validation-msg error'; }
+        if (obsInput) obsInput.classList.add('input-error');
+        this.mostrarModal('Erro', 'Observação é obrigatória.', 'error');
         return;
     }
     const estoqueAntes = produto.estoque || 0;
@@ -5014,6 +5193,8 @@ SistemaTabacaria.prototype.confirmarMovimento = function(tipo) {
         return;
     }
 
+    const vendedorObj = (this.vendedores || []).find(v => String(v.id) === String(vendId)) || null;
+
     const movimento = {
         id: 'M' + Date.now() + '-' + produto.id,
         data: dataStr ? new Date(dataStr).toISOString() : new Date().toISOString(),
@@ -5028,7 +5209,9 @@ SistemaTabacaria.prototype.confirmarMovimento = function(tipo) {
         estoqueAntes,
         estoqueDepois: novoEstoque,
         observacao: obs,
-        motivo
+        motivo,
+        valorUnitario: Number.isFinite(produto.preco) ? produto.preco : undefined,
+        vendedor: vendedorObj ? { id: vendedorObj.id, nome: vendedorObj.nome } : vendId ? { id: vendId, nome: '' } : null
     };
     // Persistir
     this.registrarMovimentoEstoque(movimento);
@@ -5099,22 +5282,34 @@ SistemaTabacaria.prototype._atualizarPreviewMovimento = function() {
     // Validações
     let erro = '';
     let aviso = '';
+    const vendId = document.getElementById('mov-vendedor')?.value || '';
     if (tipoSelecionado === 'saida' && quantidade > estoqueAtual) {
         erro = 'Quantidade de saída excede o estoque atual.';
     }
     if (tipoSelecionado === 'ajuste' && estoqueDepois < 0) {
         erro = 'Ajuste não pode resultar em estoque negativo.';
     }
-    if (!erro) {
-        if (estoqueDepois === 0) aviso = 'Produto ficará sem estoque.';
-        else if (estoqueDepois > 0 && estoqueDepois <= minimo) aviso = 'Produto ficará com estoque baixo.';
+    if (!erro && (tipoSelecionado === 'entrada' || tipoSelecionado === 'saida') && !vendId) {
+        erro = 'Selecione o vendedor.';
+    }
+    const obsVal = (document.getElementById('mov-obs')?.value || '').trim();
+    if (!erro && !obsVal) {
+        erro = 'Observação é obrigatória.';
+        const obsInput = document.getElementById('mov-obs');
+        if (obsInput) obsInput.classList.add('input-error');
+    } else {
+        const obsInput = document.getElementById('mov-obs');
+        if (obsInput) obsInput.classList.remove('input-error');
     }
 
     if (validationEl) {
         validationEl.textContent = erro || aviso;
         validationEl.className = `validation-msg ${erro ? 'error' : aviso ? 'warning' : ''}`;
     }
-    if (confirmBtn) confirmBtn.disabled = !!erro || !Number.isFinite(quantidade) || quantidade <= 0;
+    const fieldErr = document.getElementById('mov-obs-error');
+    if (fieldErr) fieldErr.style.display = (!obsVal) ? 'block' : 'none';
+    const vendedorValido = !!vendId || tipoSelecionado === 'ajuste';
+    if (confirmBtn) confirmBtn.disabled = !!erro || !Number.isFinite(quantidade) || quantidade <= 0 || ((tipoSelecionado === 'entrada' || tipoSelecionado === 'saida') && !vendedorValido) || !obsVal;
 };
 
 // Rotatividade de estoque (30 dias)
@@ -5179,9 +5374,163 @@ function adjustFormQuantity(inputId, change) {
 
 
 
-// Inicializar página padrão
+// Inicializar página padrão e habilitar detalhes das Movimentações Recentes
+SistemaTabacaria.prototype._formatBRLMoney = function(v) {
+    return Number.isFinite(v) ? v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : '—';
+};
+
+// Sanitização simples para strings em templates
+SistemaTabacaria.prototype._safeStr = function(v) {
+    if (v == null) return '';
+    const s = typeof v === 'string' ? v : String(v);
+    return s.replace(/[\n\r\t]+/g, ' ').trim();
+};
+
+// Formatação de data/hora com vírgula garantida (dd/mm/aaaa, HH:MM:SS)
+SistemaTabacaria.prototype._formatBRLDateTime = function(dt) {
+    const d = new Date(dt);
+    if (Number.isNaN(d.getTime())) return '—';
+    const pad = (n) => String(n).padStart(2, '0');
+    return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()}, ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+};
+
+// Estilos da seção Movimentações Recentes (badges e transição do modal)
+SistemaTabacaria.prototype._ensureMovRecentesStyles = function() {
+    if (document.getElementById('mov-recentes-style')) return;
+    const style = document.createElement('style');
+    style.id = 'mov-recentes-style';
+    style.textContent = `
+      .mov-list .badge{display:inline-block;padding:2px 8px;border-radius:999px;font-size:12px;margin-right:6px;border:1px solid transparent}
+      .mov-list .badge.entrada{background:#ecfdf5;color:#065f46;border-color:#a7f3d0}
+      .mov-list .badge.saida{background:#fff7ed;color:#9a3412;border-color:#fed7aa}
+      .mov-item{cursor:pointer}
+      .muted{color:#6b7280}
+      #modal.fade{opacity:0;transition:opacity .2s ease}
+      #modal.fade.show{opacity:1}
+      .mov-detail-header{display:flex;align-items:center;justify-content:space-between;gap:8px}
+      .mov-detail-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:8px}
+      .mov-detail-actions{margin-top:12px;display:flex;justify-content:flex-end}
+    `;
+    document.head.appendChild(style);
+};
+
+SistemaTabacaria.prototype.navegarDetalheMovimentacao = function(delta) {
+    const lista = this._movRecentesCache || [];
+    let idx = (this._movDetalheIndex || 0) + delta;
+    if (idx < 0 || idx >= lista.length) return;
+    this.abrirDetalheMovimentacao(idx);
+};
+
+SistemaTabacaria.prototype.abrirDetalheMovimentacao = function(index) {
+    const lista = this._movRecentesCache || [];
+    const m = lista[index];
+    if (!m) return;
+    this._movDetalheIndex = index;
+
+    const modal = document.getElementById('modal');
+    const body = document.getElementById('modal-body');
+    if (!modal || !body) return;
+
+    const tipoIcon = m.tipo === 'entrada' ? '⬆️' : (m.tipo === 'saida' ? '⬇️' : '⚙️');
+    const nome = this._safeStr(m.nome || m.produtoNome || m.codigo || 'Produto');
+    const qtd = Number(m.quantidade) || 0;
+    const unitRaw = (m.valorUnitario ?? m.preco ?? m.valor);
+    const unit = Number(unitRaw);
+    const hasUnit = unitRaw != null && unitRaw !== '' && Number.isFinite(unit);
+    const total = hasUnit ? unit * qtd : NaN;
+    const vendedorNome = (m.vendedor && typeof m.vendedor === 'object') ? (m.vendedor.nome || '') : (typeof m.vendedor === 'string' ? m.vendedor : '');
+    const vendedorId = (m.vendedor && typeof m.vendedor === 'object') ? (m.vendedor.id || '') : '';
+    const vendedorStr = vendedorId ? `${this._safeStr(vendedorNome)} (ID: ${this._safeStr(vendedorId)})` : (this._safeStr(vendedorNome) || '—');
+    const dataHora = this._formatBRLDateTime(m.data);
+
+    const extras = [];
+    if (m.observacao) extras.push({label:'Observação', value: this._safeStr(m.observacao)});
+    if (m.motivo) extras.push({label:'Motivo', value: this._safeStr(m.motivo)});
+    if (m.origem) extras.push({label:'Origem', value: this._safeStr(m.origem)});
+    if (m.destino) extras.push({label:'Destino', value: this._safeStr(m.destino)});
+    if (m.estoqueAntes != null) extras.push({label:'Estoque antes', value: String(m.estoqueAntes)});
+    if (m.estoqueDepois != null) extras.push({label:'Estoque depois', value: String(m.estoqueDepois)});
+
+    body.innerHTML = `
+        <div class="mov-detail">
+            <div class="mov-detail-header">
+                <button class="btn-outline" onclick="sistema.navegarDetalheMovimentacao(-1)" ${index <= 0 ? 'disabled' : ''}>◀ Anterior</button>
+                <div class="mov-detail-title"><span class="badge ${m.tipo}">${String(m.tipo || '').toUpperCase()}</span> ${tipoIcon} <strong>${nome}</strong></div>
+                <button class="btn-outline" onclick="sistema.navegarDetalheMovimentacao(1)" ${index >= (lista.length - 1) ? 'disabled' : ''}>Próximo ▶</button>
+            </div>
+            <div class="mov-detail-grid">
+                <div class="detail-item"><div class="label">Quantidade:</div><div class="value">${qtd} un</div></div>
+                <div class="detail-item"><div class="label">Valor Unitário:</div><div class="value">${sistema._formatBRLMoney(unit)}</div></div>
+                <div class="detail-item"><div class="label">Total:</div><div class="value">${sistema._formatBRLMoney(total)}</div></div>
+                <div class="detail-item"><div class="label">Vendedor:</div><div class="value">${vendedorStr}</div></div>
+                <div class="detail-item"><div class="label">Data/Hora:</div><div class="value">${dataHora}</div></div>
+                ${extras.map(e => `<div class=\"detail-item\"><div class=\"label\">${e.label}:</div><div class=\"value\">${e.value}</div></div>`).join('')}
+            </div>
+            <div class="mov-detail-actions">
+                <button class="btn-outline" onclick="fecharModal()">Voltar à lista</button>
+            </div>
+        </div>
+    `;
+    // Transição suave: aplicar fade somente neste modal
+    modal.classList.add('fade');
+    modal.style.display = 'block';
+    requestAnimationFrame(() => modal.classList.add('show'));
+};
+
+SistemaTabacaria.prototype._bindMovListDelegation = function() {
+    const ul = document.getElementById('mov-list');
+    if (!ul || ul._movDelegationBound) return;
+    ul._movDelegationBound = true;
+    ul.addEventListener('click', (ev) => {
+        const li = ev.target.closest('li.mov-item');
+        if (!li) return;
+        const idx = Number(li.dataset.index);
+        if (!Number.isNaN(idx)) this.abrirDetalheMovimentacao(idx);
+    });
+    ul.addEventListener('keydown', (ev) => {
+        if (ev.key === 'Enter' || ev.key === ' ') {
+            const li = ev.target.closest('li.mov-item');
+            if (!li) return;
+            const idx = Number(li.dataset.index);
+            if (!Number.isNaN(idx)) this.abrirDetalheMovimentacao(idx);
+        }
+    });
+};
+
+SistemaTabacaria.prototype.atualizarMovListComDetalhes = function() {
+    const ul = document.getElementById('mov-list');
+    if (!ul) return;
+    const movimentos = this.obterMovimentosEstoque ? this.obterMovimentosEstoque() : [];
+    const seteDiasAtras = Date.now() - (7 * 24 * 60 * 60 * 1000);
+    const recentes = movimentos.filter(m => new Date(m.data).getTime() >= seteDiasAtras).sort((a,b) => new Date(b.data) - new Date(a.data));
+    if (recentes.length === 0) {
+        ul.innerHTML = '<li class="mov-empty">Sem movimentações nos últimos 7 dias</li>';
+        return;
+    }
+    this._movRecentesCache = recentes.slice(0, 100);
+    ul.innerHTML = this._movRecentesCache.slice(0, 20).map((m, i) => {
+        const tipoIcon = m.tipo === 'entrada' ? '⬆️' : (m.tipo === 'saida' ? '⬇️' : '⚙️');
+        const nome = this._safeStr(m.nome || m.produtoNome || m.codigo || 'Produto');
+        const dataLocal = this._formatBRLDateTime(m.data);
+        const unitRaw = (m.valorUnitario ?? m.preco ?? m.valor);
+        const unit = Number(unitRaw);
+        const qtd = Number(m.quantidade) || 0;
+        const hasUnit = unitRaw != null && unitRaw !== '' && Number.isFinite(unit);
+        const totalStr = hasUnit ? ' • <span class="muted">Total: ' + (unit * qtd).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) + '</span>' : '';
+        const vendedorNome = (m.vendedor && typeof m.vendedor === 'object') ? (m.vendedor.nome || '') : (typeof m.vendedor === 'string' ? m.vendedor : '');
+        const vendedorId = (m.vendedor && typeof m.vendedor === 'object') ? (m.vendedor.id || '') : '';
+        const vendedorStr = vendedorId ? `${this._safeStr(vendedorNome)} (ID: ${this._safeStr(vendedorId)})` : (this._safeStr(vendedorNome) || '—');
+        const isRecent = new Date(m.data).getTime() >= (Date.now() - (2 * 60 * 60 * 1000));
+        return `<li class="mov-item ${isRecent ? 'recent' : ''}" data-index="${i}" tabindex="0" role="button" aria-label="Ver detalhes da movimentação ${nome}">
+            <span class="badge ${m.tipo}">${String(m.tipo || '').toUpperCase()}</span> ${tipoIcon} <strong>${nome}</strong> • ${qtd} un • <span class="muted">${dataLocal}</span>${totalStr} • Vendedor: ${vendedorStr}
+        </li>`;
+    }).join('');
+    this._bindMovListDelegation();
+};
+
 document.addEventListener('DOMContentLoaded', function() {
     setTimeout(() => {
         showTab('caixa'); // Página inicial
+        try { if (typeof sistema?.atualizarMovListComDetalhes === 'function') sistema.atualizarMovListComDetalhes(); } catch (_) {}
     }, 500);
 });

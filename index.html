@@ -11,6 +11,10 @@
     <title>Sistema de Gestão - HidenSystems</title>
     <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
     <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+    <!-- Preconnect para Google Fonts e carregamento rápido com display=swap -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style id="login-gate-styles">
@@ -225,8 +229,8 @@
                         </div>
                         <img id="brand-logo" class="logo-image" alt="Logo da Hiden Systems" decoding="async" loading="eager" fetchpriority="high" />
                         <div class="logo-text">
-                            <h1>HidenSystems</h1>
-                            <span class="logo-subtitle">Sistema de Gestão</span>
+                            <h1>Ponto de Venda</h1>
+                            <span class="logo-subtitle">Sistema de Caixa Profissional</span>
                         </div>
                     </div>
                 </div>
@@ -765,13 +769,26 @@
                                     </div>
                                     <div id="qtd-feedback" class="input-feedback" aria-live="polite"></div>
                                 </div>
+                                <div class="input-group">
+                                    <label for="entrada-vendedor">Vendedor</label>
+                                    <div class="select-wrapper">
+                                        <select id="entrada-vendedor" required>
+                                            <option value="">Selecione o vendedor...</option>
+                                        </select>
+                                        <div class="select-icon">
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6,9 12,15 18,9"/></svg>
+                                        </div>
+                                    </div>
+                                    <div id="vendedor-feedback" class="input-feedback" aria-live="polite"></div>
+                                </div>
                             </div>
                             <div class="form-row">
                                 <div class="input-group" style="flex: 1;">
-                                    <label for="entrada-observacao">Observação (opcional)</label>
+                                    <label for="entrada-observacao" class="required-label">Observação</label>
                                     <div class="input-wrapper">
-                                        <input type="text" id="entrada-observacao" placeholder="Ex.: reposição, lote X">
+                                        <input type="text" id="entrada-observacao" placeholder="Ex.: reposição, lote X" required aria-required="true">
                                     </div>
+                                    <div id="entrada-observacao-error" class="input-feedback" aria-live="polite"></div>
                                 </div>
                             </div>
                             <div class="form-actions">
@@ -1448,6 +1465,35 @@
         </div>
     </div>
 
-    <script src="script.js"></script>
+    <style id="mov-recentes-css">
+      /* Movimentações Recentes: estilos de lista e modal (contraste reforçado) */
+      .mov-item { padding: 10px 12px; border-radius: 10px; background: #F7F8FA; margin: 6px 0; cursor: pointer; outline: none; border: 1px solid #e5e7eb; transition: background .15s ease, box-shadow .15s ease, transform .15s ease; }
+      .mov-item.recent { background: #eef2ff; border-color: #c7d2fe; box-shadow: 0 4px 14px rgba(59,130,246,.15); }
+      .mov-item:hover, .mov-item:focus { background: #eef2ff; box-shadow: 0 0 0 2px #e0e7ff inset; transform: translateY(-1px); }
+      .mov-item .muted { color: var(--muted-700, #64748b); }
+      .mov-empty { padding: 12px; color: var(--muted-700, #64748b); }
+
+      .mov-detail { padding: 8px; }
+      .mov-detail .mov-detail-header { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+      .mov-detail .mov-detail-title { font-weight: 600; display: flex; align-items: center; gap: 8px; }
+      .mov-detail .badge { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 12px; border: 1px solid transparent; }
+      .mov-detail .badge.entrada { background: #ecfdf5; color: #065f46; border-color: #a7f3d0; }
+      .mov-detail .badge.saida { background: #fff7ed; color: #9a3412; border-color: #fed7aa; }
+      .mov-detail .badge.ajuste { background: #f1f5f9; color: #334155; border-color: #e2e8f0; }
+
+      .mov-detail .mov-detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 16px; margin-top: 12px; }
+      @media (max-width: 640px) { .mov-detail .mov-detail-grid { grid-template-columns: 1fr; } }
+      .mov-detail .detail-item { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 8px 10px; }
+      .mov-detail .detail-item .label { color: #334155; font-weight: 600; }
+      .mov-detail .detail-item .value { color: #0f172a; }
+
+      .mov-detail .mov-detail-actions { margin-top: 16px; display: flex; justify-content: flex-end; }
+
+      /* Fallback leve para btn-outline (caso não exista) */
+      .btn-outline { border: 1px solid #cbd5e1; background: #fff; color: #0f172a; padding: 8px 12px; border-radius: 8px; transition: background .15s ease, box-shadow .15s ease, transform .15s ease; }
+      .btn-outline:disabled { opacity: .55; cursor: not-allowed; }
+      .btn-outline:hover { background: #f8fafc; box-shadow: 0 6px 20px rgba(2,6,23,.10); transform: translateY(-1px); }
+    </style>
+    <script defer src="script.js"></script>
 </body>
 </html>
